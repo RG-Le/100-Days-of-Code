@@ -1,0 +1,787 @@
+100 DAYS OF CODE
+
+1. You are given an array of strings tokens that represents an arithmetic expression in a Reverse Polish Notation.
+
+APPROACH:
+(LOOP FOR LENGTH OF TOKENS ARRAY)
+I. TAKE EACH TOKEN AND IF ITS A NUMBER CONVERT IT TO INT AND STORE IT IN STACK
+II. IF THE TOKEN IS AN OPERATOR, POP OUT TWO ELEMENTS FROM THE STACK, THEN PERFORM THE
+OPERATION AND PUSH THE RESULT AGAIN INTO THE STACK
+III. FINALLY RETURN THE TOP MOST ELEMENT OF THE STACK
+
+def evalRPN(self, tokens: List[str]) -> int:
+        stack = []
+
+        for i in range(len(tokens)):
+            if tokens[i] in "+-/*":
+                num1 = stack.pop()
+                num2 = stack.pop()
+
+                if tokens[i] == "+":
+                    stack.append(num2 + num1)
+                
+                if tokens[i] == "-":
+                    stack.append(num2 - num1)
+
+                if tokens[i] == "*":
+                    stack.append(num2 * num1)
+
+                if tokens[i] == "/":
+                    stack.append(int(num2 / num1))
+
+            else:
+                stack.append(int(tokens[i]))
+        
+        return stack[-1]
+
+-----------------------------------------------------------------------------------------------------------------------------------
+
+2. Combination Sum with a twist.
+
+
+APPROACH:
+I. CREATE AN ARRAY FROM DIGITS 1 TO 9
+II. DEFINE THE RECURSIVE FUNCTION STARTING FROM IDX = 0 TILL IDX = 9
+I.E VALUES 1 TO 9. ALSO THE PARAMETERS WOULD BE EMPTY LST AND CURR TARGET
+III. BASE CASE FOR RECURSION--> IF TARGET == 0---> CHECK IF LEN(LST) == K
+IF TRUE THEN ADD THE ELEMENTS FROM THE LST TO FINAL ANS...ELSE RETURN
+IV. RECURSION LOGIC
+ITERATE FROM CURR_IDX TO LAST_IDX = 9
+IF ARR[CURR_IDX] > CURR_TARGET---> BREAK THE LOOP (CURR RECURSION CALL WILL BE OVER)
+ELSE--> ADD THE ARR[I] TO LST
+RECUSTION CALL WITH PARAMS CURR_IDX+1, CURR_TARGET-ARR[I], LST
+ONCE THIS CALL ENDS, POP THE ELEMENT FROM THE LST
+
+
+
+def combinationSum3(self, k: int, n: int) -> List[List[int]]:
+        arr = [i for i in range(1, 10)]
+        ans = []
+
+        def helper(idx, target, lst):
+            if target == 0:
+                if len(lst) == k:
+                    ans.append([el for el in lst])
+                return
+            
+            for i in range(idx, 9):
+                if arr[i] > target:
+                    break
+                lst.append(arr[i])
+                helper(i+1, target-arr[i], lst)
+                lst.pop()
+
+        helper(0, n, [])
+        return ans
+
+--------------------------------------------------------------------------------------------------------------------------------------
+
+3. Bulls and Cows
+
+QUESTION EXPLANATION:
+GIVEN TWO STRINGS OF INTEGETS SECRET AND GUESS
+BULL IS NUMBER OF POSITIONS IN GUESS THAT ARE SAME AS SECRET I.E
+SECRET[I] == GUESS[I]
+COW IS NUMBER OF ELEMENTS IN GUESS THAT ARE IN SECRET BUT NOT AT CORRECT POSITION
+RETURN BULL-CNT AND COW-CNT
+
+APPROACH:
+I. CREATE A BUCKET ARRAY OF 0'S FOR DIGITS 0-9
+II. ITERATE OVER BOTH STRINGS
+......IF SECRET[I]==GUESS[I]--> INCREMENT THE BULL COUNTER
+......ELSE-->BUCKET[SECRET[I]] += 1 AND BUCKET[GUESS[I]] -= 1
+III. GET THE SUM OF ALL THE POSITIVE VALUES IN THE BUCKET CALL IT POS-SUM
+IV. FINALLY NUMBER OF COWS = LEN(SECRET) - BULL_CNT - POS_CNT
+
+
+def getHint(self, secret: str, guess: str) -> str:
+        bullCnt = 0
+        arr = [0 for i in range(10)]
+
+        for i in range(len(secret)):
+            if secret[i] == guess[i]:
+                bullCnt += 1
+            else:
+                arr[int(secret[i])] += 1
+                arr[int(guess[i])] -= 1
+        
+        posSum = 0
+        for el in arr:
+            if el > 0:
+                posSum += el
+
+        cows = len(secret) - bullCnt - posSum
+        return str(bullCnt) + "A" + str(cows) + "B"
+
+-----------------------------------------------------------------------------------------------------------------------------------------
+
+4. You are given an integer array nums of length n. Return maximum length of Rotation Function.
+
+EXPLANATION:
+ROTATION FUNCTION = SUM(EL*IDX FOR EL, IDX_VAL IN ARR) OR
+ROTATION FUNCTION(0) = 0*ARR[0] + 1*ARR[1] + ...
+NOW,
+ROTATION FUNCTION(1) = 1*ARR[0] + 2*ARR[1] + ... + N-1*ARR[N-1] + 0*ARR[N]
+
+WE HAVE TO CALCULATE THE MAX OF THESE FUNCTIONS I.E MAX(F(0), F(1), ..F(N))
+
+
+APPROACH:
+
+BRUTE FORCE
+FOR I FROM 1 TO N
+-->CALCULATE THE FUNCTION VALUE ONCE
+-->ROTATE THE ARRAY BY ONE
+RETURN THE MAX VALUE
+
+OPTIMIZED
+WE CAN REPRESENT ANY FUNCTION IN TERMS OF THE PREVIOUS ONE
+
+ARR = [4,3,2,6]
+EX: F(0) = 0*4 + 1*3 + 2*2 + 3*6
+AND F(1) = 1*4 + 2*3 + 3*2 + 0*6
+HERE PIVOT OR ROTATION INDEX IS 3 OR ARR[3]
+NOW WE CAN SAY F(1) = (0*4 + 4) + (1*3 + 3) + (2*2 + 2) + (3*6 + 6) - 4*6
+SO IF GENERALIZE IT
+----------MAIN EQ -----------------------------
+F(N) = F(N-1) + SUM(ARR) - LEN(ARR)*ARR[PIVOT]
+
+I. CALCULATE THE SUM OF ARRAY AND F (FOR FIRST TIME)
+II. ITERATE FROM PIVOT = N-1 TO 0
+III. IN EACH ITERATION CALCULATE F += SUM - N*ARR[PIVOT]
+IV. ANS = MAX(F, ANS)
+V. RETURN ANS
+
+
+def maxRotateFunction(self, nums: List[int]) -> int:
+        n = len(nums)
+        s = sum(nums)
+        fn = sum(el*idx for idx, el in enumerate(nums))
+        ans = fn
+        for pivot in range(n-1, -1, -1):
+            fn += s - n*nums[pivot]
+            ans = max(fn, ans)
+        return ans
+
+------------------------------------------------------------------------------------------------------------------------------
+
+5. Largest Divisible Subset
+
+PREREQ --> LONGEST INCREASING SUBSEQUENCE
+
+
+def largestDivisibleSubset(self, nums: List[int]) -> List[int]:
+        n = len(nums)
+        dp = [1] * n
+        store = [0] * n
+        lastIdx = 0
+        maxi = 1
+        nums.sort()
+
+        for i in range(n):
+            store[i] = i
+            for prev in range(0, i):
+                if (nums[i] % nums[prev] == 0) and (1 + dp[prev] > dp[i]):
+                    dp[i] = 1 + dp[prev]
+                    store[i] = prev
+
+            if dp[i] > maxi:
+                maxi = dp[i]
+                lastIdx = i
+        
+        temp = []
+        temp.append(nums[lastIdx])
+        while store[lastIdx] != lastIdx:
+            lastIdx = store[lastIdx]
+            temp.append(nums[lastIdx])
+
+        return temp[::-1]
+
+-------------------------------------------------------------------------------------------------------------------------------
+
+6. How to find a perfect Rectangle.
+
+QEUSTION EXPLANATION:
+GIVEN AN ARRAY OF COORDINATES OF RECTANGLES (BOTTOM LEFT AND TOP RIGHT COORDINATES)
+CHECK IF ALL RECTANGLES TOGETHER FORM AN EXACT COVER OF RECTANGULAR REGION
+
+
+APPROACH:
+I. FIND THE SMALLEST BOTTOM LEFT AND HIGHEST TOP RIGHT COORDINATE
+II. FOR EACH RECTANGLE, CALCULATE THE AREA AND ADD IT TO THE TOTAL
+III. GET ALL FOUR COORDINATES OF EACH RECTANGLE AND ADD THEM TO A SET
+IV. IF A SET ALREADY HAS THAT COORDINATE, REMOVE IT
+V. AFTER THE LOOP, CHECK IF LENGTH OF SET IS 4 --> ELSE RETURN FALSE
+VI. NOW GET THE POSSIBLE COORDINATES OF THE COVER RECTANGLE USING THE SMALLEST BOTTOM LEFT AND HIGHEST TOP RIGHT COORDINATES AND
+CHECK IF IT IS IN THE SET
+IF NOT THE RETURN FALSE
+VII. CALCULATE THE MAX POSSIBLEE AREA USING SMALLEST BOTTOM LEFT AND HIGHEST TOP RIGHT COORDINATES
+VIII. RETURN MAX POSSIBLE AREA == TOTAL AREA
+
+
+
+def isRectangleCover(self, rectangles: List[List[int]]) -> bool:
+        if len(rectangles) == 0:
+            return False
+
+        totalArea = 0
+        x1, y1 = 1e9, 1e9
+        x2, y2 = -1e9, -1e9
+        st = set()
+        for rect in rectangles:
+            x1 = min(x1, rect[0])
+            y1 = min(y1, rect[1])
+            x2 = max(x2, rect[2])
+            y2 = max(y2, rect[3])
+            totalArea += ((rect[2]-rect[0]) * (rect[3]-rect[1]))
+            
+            pt1 = str(rect[0]) + " " + str(rect[1])
+            pt2 = str(rect[0]) + " " + str(rect[3])
+            pt3 = str(rect[2]) + " " + str(rect[1])
+            pt4 = str(rect[2]) + " " + str(rect[3])
+
+            st.add(pt1) if pt1 not in st else st.remove(pt1)
+            st.add(pt2) if pt2 not in st else st.remove(pt2)
+            st.add(pt3) if pt3 not in st else st.remove(pt3)
+            st.add(pt4) if pt4 not in st else st.remove(pt4)
+
+
+        if (len(st) != 4 or (str(x1) + " " + str(y1) not in st) 
+            or (str(x2) + " " + str(y2) not in st) 
+            or (str(x1) + " " + str(y2) not in st) 
+            or (str(x2) + " " + str(y1) not in st)):
+            return False
+
+        possArea = (x2-x1) * (y2-y1)
+        return possArea == totalArea
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+7. Scheduling a Course
+
+APPROACH:
+USE TOPOLOGICAL SORTING
+FOR EACH PAIR U,V U SHOULD APPEAR AFTER/BEFORE V
+
+# using Algorithm for topological sort (BFS)
+# indegree = number of incoming edges
+# STEP1: CALCULATE INDEGREE OF ALL NODES
+# STEP2: INSERT ALL NODES WITH INDEGREE 0 IN THE QUEUE
+# STEP3: TAKE EACH OF THEM OUT OF THE QUEUE (PRINT), AND REDUCE THE INDEGREE OF NEIGHBORS, AND IF THE INDEGREE OF NEIGHBORS BECOME 0, ADD THOSE NEIGHBORS IN THE QUEUE
+
+
+def canFinish(self, numCourses: int, prerequisites: List[List[int]]) -> bool:
+        graph = [[] for i in range(numCourses)]
+        for it in prerequisites:
+            graph[it[0]].append(it[1])
+
+        # Perform Topological Sort
+        # (Kahns Algorithm)
+
+        indeg = [0 for i in range(numCourses)]
+        for i in range(numCourses):
+            for it in graph[i]:
+                indeg[it] += 1
+
+        queue = []
+        for i in range(numCourses):
+            if indeg[i] == 0:
+                queue.append(i) 
+
+        topo = []
+        while queue:
+            node = queue.pop(0)
+            topo.append(node)
+
+            for it in graph[node]:
+                indeg[it] -= 1
+                if indeg[it] == 0:
+                    queue.append(it)
+        
+        if len(topo) == numCourses:
+            return True
+        return False
+
+--------------------------------------------------------------------------------------------------------------------------------------
+
+8. Profitable Path in a Tree.
+
+INTUTION:
+IF ALICE REACHES A NODE THAT BOB ALREADY HAS VISITED, THE AMOUNT SHE GETS IS 0
+IF ALICE AND BOB BOTH REACH A NODE AT SAME TIME, THEY DIVIDE THE AMOUNT
+
+THUS, CALCULATING THE PARENT AND DISTANCE FROM ROOT I.E ALICE STARTING POINT WILL HELP BOB TO REACH ROOT
+ANS ALSO CHECK AT WHICH POINT BOB AND ALICE MEET/ WHICH NODES BOB COVERS FIRST
+
+THEN WE CAN UPDATE THE AMOUNT ARRAY WITH 0 FOR NODES WHERE BOB ALREADY HAS VISITED BEFORE ALICE TO 0
+AND THE NODES WHERE BOTH OF THEM REACH TOGETHER TO HALF
+I.E BOB_DIST < DISTANCE[BOB_NODE] -- > AMOUNT[BOB_NODE] = 0
+ALSO BOB_DIST == DISTANCE[BOB_NODE] -- > AMOUNT[BOB_NODE] /= 2
+
+THEN FINALLY WE CAN PERFORM DFS TRAVERSAL TILL LEAF, GETTING THE MAX POSSIBLE AMOUNT FOR ALICE
+
+APPROACH:
+I. CONSTRUCT AN ADJACANCY LIST FROM THE GIVEN EDGES
+II. INITIALIZE PARENT AND DISTANCE ARRAYS, VISITED SET
+III. FIND PARENT, DISTANCE OF EACH NODE FROM 0
+IV. SET INT CURR = BOB, INT CURR_DIST = 0
+V. WHILE BOB IS NOT AT 0 UPDATE THE AMOUNT ARRAY
+---->IF DISTANCE[CURR] > CURR_DIST THEN AMOUNT[CURR] = 0
+---->ELSE IF DISTANCE[CURR] == CURR_DIST THEN AMOUNT[CURR] /= 2
+---->  CURR = PARENT[CURR]
+----> CURR_DIST += 1
+VI. PERFORM DFS FOR ALICE WHILE CALCULATING THE AMOUNT
+
+
+class Solution:
+    tree = {}
+    parent = []
+    dist = []
+    ans = 0
+    visited = set()
+    maxAns = -1e9
+
+
+    def constructTree(self, edges):
+        n = len(edges)
+        for u, v in edges:
+            if u not in self.tree:
+                self.tree[u] = []
+            if v not in self.tree:
+                self.tree[v] = []
+            self.tree[u].append(v)
+            self.tree[v].append(u)
+
+
+    # Parent of Each Node
+    def dfsFindParent(self, curr, currPar, currDist):
+        self.dist[curr] = currDist
+        self.parent[curr] = currPar
+
+        for neighbor in self.tree[curr]:
+            if neighbor == currPar:
+                continue
+            self.dfsFindParent(neighbor, curr, currDist+1)
+    
+
+    def dfs(self, curr, amount):
+        self.visited.add(curr)
+        self.ans += amount[curr]
+        trav = 0
+
+        for neighbor in self.tree[curr]:
+            if neighbor in self.visited:
+                continue
+            trav += 1
+            self.dfs(neighbor, amount)
+        
+        if trav == 0:
+            self.maxAns = max(self.ans, self.maxAns)
+        
+        self.ans -= amount[curr]
+
+
+    def mostProfitablePath(self, edges, bob, amount):
+        self.constructTree(edges)
+        n = len(edges)
+        self.parent = [-1] * (n+1)
+        self.dist = [-1] * (n+1)
+        #print(len(self.pa))
+        self.dfsFindParent(0,0,0)
+
+        curr = bob
+        currDist = 0
+        while curr != 0:
+            if self.dist[curr] > currDist:
+                amount[curr] = 0
+            elif self.dist[curr] == currDist:
+                amount[curr] /= 2
+            
+            curr = self.parent[curr]
+            currDist += 1
+        
+        self.dfs(0, amount)
+        return int(self.maxAns)
+  
+----------------------------------------------------------------------------------------------------------------
+
+9. Number of Pairs satisfying Inequality.
+
+
+APPROACH:
+GIVEN INEQUALITY:
+nums1[i] - nums1[j] <= nums2[i] - nums2[j] + diff
+FOR I < J 
+NOW LETS UPDATE THE INEQUALITY:
+nums1[i] - nums2[i] <= nums1[j] - nums2[j] + diff
+FURTHUR REARRANGING
+(nums1[i] - nums2[i]) - (nums1[j] - nums2[j]) <= diff
+THUS--> nums[i] - nums[j] <= diff
+
+NOW WE CAN USE DIVIDE AND CONQUER ALGORITHM
+THUS MERGE SORT WILL BE HELPFUL
+AT THE MERGE STEP, WE CAN AS EACH PART WILL BE SORTED
+AND IN ORDER THAT ITH WILL BE IN LEFT AND JTH IN RIGHT,
+COUNT THE PAIRS ACCORDING TO THE INEQUALITY
+
+
+count = 0
+
+    def numberOfPairs(self, nums1: list[int], nums2: list[int], diff: int) -> int:
+        n = len(nums1)
+        nums = [0] * n
+        for i in range(n):
+            nums[i] = (nums1[i] - nums2[i])
+        
+        print(nums)
+        self.mergeSort(nums, 0, n-1, diff)
+        print(nums)
+        return self.count
+
+
+    def mergeSort(self, arr, low, high, diff):
+        if low >= high:
+            return
+        
+        mid = int((low + high) / 2)
+        self.mergeSort(arr, low, mid, diff)
+        self.mergeSort(arr, mid+1, high, diff)
+        self.merge(arr, low, mid, high, diff)
+
+    
+    def merge(self, arr, low, mid, high, diff):
+        lst = []
+        left, right = low, mid+1
+        
+        while right <= high:
+            for i in range(right):
+                if arr[i] - diff <= arr[right]:
+                    self.count += 1
+                # else: break
+            right += 1
+        
+        right = mid+1
+        while left <= mid and right <= high:
+            if arr[left] <= arr[right]:
+                lst.append(arr[left])
+                left += 1
+            else:
+                lst.append(arr[right])
+                right += 1
+    
+        while left <= mid:
+            lst.append(arr[left])
+            left += 1 
+
+        while right <= high:
+            lst.append(arr[right])
+            right += 1
+
+        for i in range(low, high+1):
+            arr[i] = lst[i-low] 
+
+
+APPROACH 2:
+NOW WE WILL USE THE INEQUALITY AND CREATE A NEW ARRAY TO STORE DIFF OF BOTH AT INDEX
+THEN WE WILL USE A  SORTED LIST TO KEEP SEEN NUMBERS SORTED
+THEN PERFORM BINARY SEARCH
+
+
+def numberOfPairs(self, nums1: List[int], nums2: List[int], diff: int) -> int:
+        # [1] it is easily observed that the problem for two arrays
+        #     can be restated as a problem for a single array which
+        #     equals to their sum;
+        nums = np.array(nums1) - np.array(nums2)
+        
+        # [2] we use SortedList to keep seen numbers sorted
+        seen = SortedList()
+        count = 0
+        
+        for n in nums:
+            # [3] for sorted lists, performing binary search allows
+            #     to obtain the index of insertion in logN time;
+            #     this index equals to the amount of numbers (i.e.,
+            #     the amount of pairs) that satisfy the condition 
+            count += seen.bisect_right(n + diff)
+            seen.add(n)
+        
+        return count
+
+
+------------------------------------------------------------------------------------------------------
+
+10. Shortest Unsorted continuous Subarray
+
+APPROACH:
+CREATE A NEW ARRAY THAT IS SORTED VERSION OF GIVEN ARRAY
+FIND THE INDEX FROM STARTING WHERE THE ELEMENTS AT SAME INDEX OF BOTH ARRAYS DO NOT MATCH
+SIMILARY FIND THE INDEX FROM THE END
+IF ARRAY IS ALREADY SORTED RETURN 0 ELSE RETURN END-START+1
+
+def findUnsortedSubarray(self, nums: List[int]) -> int:
+        sorted_nums = sorted(nums)
+        st = 0
+        end = len(nums) - 1
+
+        while st < len(nums) and nums[st] == sorted_nums[st]:
+            st += 1
+
+        while end >= 0 and nums[end] == sorted_nums[end]:
+            end -= 1
+
+        return 0 if end <= st else end-st+1
+
+-----------------------------------------------------------------------------------------------------------------
+
+11. Number of ways to arrive at a destination
+
+
+APPROACH:
+DDIJKSTRA'S ALGORITHM
+I. CREATE A GRAPH
+II. INITIALIZE A DIST, WAYS ARRAYS WITH INF, 0 RESPECTIVELY
+III. DIST[0] = 0 AND WAYS[0] = 1
+IV. CREATE A MIN_HEAP AND PUSH 0,0 INTO IT I.E (INITIAL DIST, STARTING NODE)
+V. WHILE MIN_HEAP IS NOT EMPTY, POP OUT THE TOP MOST ELEMT, THUS WE GET CURR_DIST, NODE
+VI. ITERATE OVER THE NEIGHBORS OF NODE
+----->FOR EACH ITERATION YOU GET ADJ_NODE, EDGE_WT
+-----> IF  CURR_DIST + EDGE_WT < DIST[ADJ_NODE]
+-------------> THEN DIST[ADJ_NODE] = CURR_DIST + EDGE_WT
+-------------> ALSO WAYS[ADJ_NODE] = WAYS[NODE]
+-------------> FINALLY PUSH (CURR_DIST+EDG_WT, ADJ_NODE) IN MIN_HEAP
+-----> ELSE IF CURR_DIST + EDGE_WT == DIST[ADJ_NODE]
+-------------> TEHN WAYS[ADJ_NODE] += WAYS[NODE]
+VII. FINALLY RETURN WAYS[N-1] % 1e9+7
+
+
+def countPaths(self, n: int, roads: List[List[int]]) -> int:
+	if n == 1:
+            return 1
+
+        graph = {}
+        for u,v,w in roads:
+            if u not in graph:
+                graph[u] = []
+            if v not in graph:
+                graph[v] = []
+            graph[u].append((v,w))
+            graph[v].append((u,w))
+
+        dist = [1e9] * n
+        ways = [0] * n
+        ways[0] = 1 
+        dist[0] = 0
+        minHeap = [(0, 0)]
+        mod = int(1e9 + 7)
+
+        while minHeap:
+            dis, node = heapq.heappop(minHeap)
+
+            for adjNode, edgW in graph[node]:
+                if dis + edgW < dist[adjNode]:
+                    dist[adjNode] = dis + edgW
+                    heapq.heappush(minHeap, (dis+edgW, adjNode))
+                    ways[adjNode] = ways[node]
+                elif dis + edgW == dist[adjNode]:
+                    ways[adjNode] = (ways[adjNode] + ways[node]) % mod
+
+        return ways[n-1] % mod
+
+-----------------------------------------------------------------------------------------------------------------
+
+12. Longest Happy Prefix
+
+APPROACH 1: (BRUTE FORCE)
+ITERATE OVER THE STRING FROM BOTH DIRECTIONS SIMULTAINOUSLY
+I.E TAKE TWO POINTERS LEFT, RIGHT
+CHECK S[0:LEFT+1] == S[RIGHT:N] --> UPDATE THE HAPPY PREFIX EACH ITERATION IF THIS CONDITION IS TRUE
+
+
+def longestPrefix(self, s: str) -> str:
+        if len(s) == 1:
+            return ""
+        
+        if len(s) == 2:
+            if s[0] == s[1]:
+                return s[0]
+            return ""
+        
+        hs = ""
+        n = len(s)
+        left, right = 0, n - 1
+        while left != n-1 and right != 0:
+            if s[0:left+1] == s[right:n]:
+                hs = s[0:left+1]
+            left += 1
+            right -= 1
+        return hs
+
+
+APPROACH 2: (OPTIMIZED)
+KMP ALGORITHM
+
+def longestPrefix(self, s: str) -> str:
+        pi = [0]*len(s)
+        for i in range(1,len(s)):
+            j = pi[i-1]
+            while j > 0 and s[i] != s[j]:
+                j = pi[j-1]
+            if s[i] == s[j]:
+                j += 1
+            pi[i] = j
+        return s[:pi[-1]]
+
+----------------------------------------------------------------------------------------------------------------------
+
+13. Seat Arrangement in a SpiceJet Problem - Online OA February ‘22
+
+APPROACH:
+USE MATHEMATICAL INDUCATION TO PROB FOR N=1
+THEN FOR N=2, THEN FOR N=3
+USE THESE TO ARRIVE A GENERAL SOLUTION FOR N+1
+WE GET ANS = 1 IF N==1 ELSE 0.5
+
+def nthPersonGetsNthSeat(self, n: int) -> float:
+        return 1 if n == 1 else 0.5
+
+--------------------------------------------------------------------------------------------------------------------
+
+14. Deletions to make an array divisible.
+
+QUESTION EXPLANATION:
+GIVEN TWO ARRAYS NUMS, NUMS_DIVIDE. FIND THE MIN ELEMENT IN NUMS THAT DIVIDES ALL THE ELEMENTS IN NUMS DIVIDE
+
+APPROACH:
+I. FIND THE GCD/HCF OF ALL ELEMENTS OF NUMS DIVIDE
+II. ITERATE OVER THE NUMS AFTER SORTING IT AND CHECK WHETHER ITH ELEMENT DIVIDES GCD. 
+IF YES THEN RETURN I. ELSE RETURN -1 IN THE END
+
+def minOperations(self, nums: List[int], numsDivide: List[int]) -> int:
+        def gcd(a, b):
+            if b == 0:
+                return a
+            else:
+                return gcd(b, a%b)
+
+        gc = 0
+        for el in numsDivide:
+            gc = int(gcd(gc, el))
+        
+        nums.sort()
+        for i in range(len(nums)):
+            if gc % nums[i] == 0:
+                return i
+        return -1
+
+----------------------------------------------------------------------------------------------------------------------------
+
+15. Substrings containing all three Characters
+
+
+APPROACH: (OPTIMIZED)
+SUBSTRING IS VALID IF ALL THREE CHARACTERS OCCUR IN IT
+THUS IF FIRST 6 CHARACTERS OF STRING IS THE FIRST OCCURANCE OF ALL 3 CHARACTERS
+THEN WE CAN SAY THAT THERE WILL BE LATEST INDEX OF A = 5, LATEST INDEX OF B OR C IS 0
+THIS MIN(A, B, C) IS 0 AND TILL THIS POINT ONLY THIS ONE SUBSTRING CONTAINS ALL THREE LETTERS
+NOW AS WE MOVE TO THE SEVENTH STRING IF THE NEW CHAR IS SAME AS PREVIOUS ONE WE WILL ADD ONE TO CNT
+BUT IF ITS DIFFERENT THEN MIN(A,B,C) GETS UPDATED AND WE ADD IT TO COUNT AND THEN ADD 1
+
+
+def numberOfSubstrings(self, s: str) -> int:
+        cnt = 0
+        idx_a, idx_b, idx_c = -1, -1, -1
+
+        for i in range(len(s)):
+            if s[i] == 'a':
+                idx_a = i
+            elif s[i] == 'b':
+                idx_b = i
+            elif s[i] == 'c':
+                idx_c = i
+                
+            if i > 1:
+                cnt += min(idx_a, idx_b, idx_c) + 1
+        
+        return cnt
+
+-------------------------------------------------------------------------------------------------------------------------------
+
+16. Max Points on a Line
+
+APPROACH:
+CALCULATING SLOPES
+LOOPING OVER THE POINTS AND GETTING THEIR SLOPES W.R.T THE CURRENT POINT. THEN GETTING THE MAX OCCURING SLOPE OUT OF THEM
+
+def maxPoints(self, points: List[List[int]]) -> int:
+        points.sort()
+        maxi = 0
+        n = len(points)
+
+        for i in range(n):
+            slopes = []
+            for j in range(i+1, n):
+                if (points[j][0] - points[i][0]) == 0:
+                    slopes.append("NO")
+                else:
+                    slopes.append((points[j][1] - points[i][1]) / (points[j][0] - points[i][0]))
+            
+            if len(slopes) > 0:
+                test_list = Counter(slopes)
+                res = test_list.most_common(1)[0][1]
+                if res > maxi:
+                    maxi = res
+
+        return maxi + 1
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+17. VALID SQUARE
+
+APPROACH:
+CALCULATE THE FOUR SIDES AND 2 DIAGONAL DISTANCES USING EUCLIDEAN DISTANCE FORMULA
+THEN ADD THEM TO A LIST AND SORT THEM
+THEN CHECK IF DIAGONALS AND SIDES ARE EQUAL AND RETURN ACCORDINGLY
+
+
+
+def distance(self, p1, p2):
+        return ((p2[0] - p1[0])*(p2[0] - p1[0])) + ((p2[1]-p1[1])*(p2[1]-p1[1]))
+
+    def validSquare(self, p1: List[int], p2: List[int], p3: List[int], p4: List[int]) -> bool:
+        sides = []
+        sides.append(self.distance(p1, p2))
+        sides.append(self.distance(p2, p3))
+        sides.append(self.distance(p3, p4))
+        sides.append(self.distance(p1, p4))
+        sides.append(self.distance(p1, p3))
+        sides.append(self.distance(p2, p4))
+
+        sides.sort()
+
+        if sides[0] > 0 and sides[0] == sides[3] and sides[4] == sides[5]:
+            return True
+        return 
+
+
+------------------------------------------------------------------------------------------------------------------------------
+18. Factorial Trailing Zeroes
+
+APPROACH:
+THE TRAILING ZEROS IN A FACTORIAL ONLY INCREASE WHEN THE FACTORIAL IS A MULTIPLE OF 5
+FOR EX: 5! HAS 1 TRAILING 0, 6-10! HAS 2 TRAILING 0, 10-15! HAS 3 TRAILING ZEROS AND SO ON
+THUS WE CAN CHECK IF N//I >= 1 (I = 5)
+THEN INCREMENT COUNT BY N//I
+AND INCREMENT I BY I*5
+FINALLY RETURN COUNT
+
+def trailingZeroes(self, n: int) -> int:
+        count = 0
+        i = 5
+        while n//i >= 1:
+            count += n//i
+            i *= 5
+        return count
+---------------------------------------------------------------------------------------------------------------------------------
+
+19. Number of Boomerangs
+
