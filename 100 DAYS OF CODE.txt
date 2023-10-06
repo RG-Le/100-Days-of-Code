@@ -304,7 +304,7 @@ def canFinish(self, numCourses: int, prerequisites: List[List[int]]) -> bool:
 
 --------------------------------------------------------------------------------------------------------------------------------------
 
-8. Profitable Path in a Tree.
+8. Profitable Path in a Tree.	(NOT CORRECT)
 
 INTUTION:
 IF ALICE REACHES A NODE THAT BOB ALREADY HAS VISITED, THE AMOUNT SHE GETS IS 0
@@ -405,7 +405,7 @@ class Solution:
   
 ----------------------------------------------------------------------------------------------------------------
 
-9. Number of Pairs satisfying Inequality.
+9. Number of Pairs satisfying Inequality.  (NOT CORRECT)
 
 
 APPROACH:
@@ -785,3 +785,81 @@ def trailingZeroes(self, n: int) -> int:
 
 19. Number of Boomerangs
 
+APPROACH:
+ITERATE OVER EACH POINT AND FOR EACH POINT, CALCULATE THE DISTANCE B/W THAT PT AND EVERY OTHER PT
+STORE THE DISTANCES IN A DICT/MAP WHERE KEY IS DIST AND VALUE IS NUMBER OF PTS THAT HAVE THAT DISTANCE FROM CURRENT PT
+NOW, NUM OF BOOMERANGS THAT CAN BE FORMED WITH CURR PT AS MIDDLE PT IS THEN CALCULATED BY TAKING 
+THE NUMBER OF PTS AT EACH DISTANCE AND MULTIPLYING IT BY NUM_PTS_AT _DIST - 1.
+THIS IS DONE FOR EACH PT AND RETURN THE FINAL CNT
+
+def numberOfBoomerangs(self, points: List[List[int]]) -> int:
+        cnt = 0
+        for p in points:
+            d = {}
+            for q in points:
+                dis = (p[0] - q[0])*(p[0] - q[0]) + (p[1] - q[1])*(p[1] - q[1])
+                d[dis] = d.get(dis, 0) + 1
+
+            for k in d:
+                cnt += d[k] * (d[k] - 1)
+        return cnt
+
+--------------------------------------------------------------------------------------------------------------------------------------
+
+20. Split Array into Sequences
+
+APPROACH:
+KEEP A COUNTER I.E A FREQ ARRAY OF ALL ELEMENTS AND A MAP
+FOR EVERY EL CHECK IF FREQ OF NEXT 2 CONSEC ELEMENTS IS MORE THAN 1 DECREASE ITS COUNTER
+ADD THE LAST CONSEC EL IN MAP
+IF 2 ELEMENTS FREQ REMAIN, THEN INCREMENT THE COUNTER OF LAST CONSEC OF MAP
+
+
+def isPossible(self, nums: List[int]) -> bool:
+        counter = collections.Counter(nums)
+        end = defaultdict(int)
+
+        for num in nums:
+            if counter[num]:
+                counter[num] -= 1
+
+                if end[num-1]:
+                    end[num] += 1
+                    end[num-1] -= 1
+                elif counter[num+1] and counter[num+2]:
+                    counter[num+1] -= 1
+                    counter[num+2] -= 1
+                    end[num+2] += 1
+                else:
+                    return False
+
+        return True 
+
+------------------------------------------------------------------------------------------------------------------------------------
+
+21. Minimum Consecutive Cards to Pick Up
+
+QUESTION EXPLANATION:
+GIVEN A CARDS ARRAY, RETURN THE MIN NUMBER OF CONSECUTIVE CARDS TO BE PICKED IN ORDER TO GET A SAME CARD
+IN OTHER WORDS FIND THE MIN SUBARRAY WITH ONLY 2 COMMAN ELEMENTS
+
+APPROACH:
+CREATA A MAP TO STORE ELEMENT AND ITS INDEX
+ITERATE OVER CARDS ARRAY AND STORE ITS INDEX
+IF A DUPLICATE COMES, CALCULATE THE I - MAP[CARDS[I]] + 1 AND KEEP ON MINIMIZING IT
+
+
+def minimumCardPickup(self, cards: List[int]) -> int:
+        d = {}
+        d[cards[0]] = 0
+        minAns = 1e9
+        for i in range(1, len(cards)):
+            if cards[i] in d:
+                minAns = min(minAns, i - d[cards[i]] + 1)
+            d[cards[i]] = i
+        
+        return -1 if minAns==1e9 else minAns
+
+-------------------------------------------------------------------------------------------------------------------------------
+
+22. 
