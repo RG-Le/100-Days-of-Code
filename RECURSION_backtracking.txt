@@ -1,0 +1,770 @@
+# RECURSION
+
+1. PRINT ALL SUBSEQUENCES
+
+arr = [3,1,2]
+
+# Recursion
+def helper(arr, idx, lst):
+    if idx >= len(arr):
+        print(lst)
+        return
+    
+    lst.append(arr[idx])
+    helper(arr, idx+1, lst) # Take
+    lst.pop()
+    helper(arr, idx+1, lst) # Not Take 
+
+def printSubs(arr):
+    helper(arr, 0, lst=[])
+    
+
+printSubs(arr)
+
+--------------------------------------------------------------------------------------
+2. PRINT ALL SUBSEQUENCES WITH SUM K
+
+arr = [1,2,1]
+
+def subsSumK(arr, k):
+    n = len(arr)
+    
+    def helper(idx, lst, k, sm):
+        if idx >= n:
+            if sm == k:
+                print(lst)
+            return
+    
+        lst.append(arr[idx])
+        helper(idx+1, lst, k, sm+arr[idx])
+        lst.pop()
+        helper(idx+1, lst, k, sm)
+    
+    helper(0, [], k, 0)
+
+
+subsSumK(arr, 2)
+
+------------------------------------------------------------------------------------
+
+3. MODIFIED THE ABOVE QUES TO PRINT A SINGLE SUBSEQUENCE:
+
+APPROACH:
+IN BASE CASE IF SUM==K RETURN TRUE ELSE FALSE
+FOR EACH RECURSION CALL RETURN TRUE IF THAT CALL RETURNS TRUE
+RETURN FALSE AT THE END OF EACH CALL
+
+def subsSumKSingle(arr, k):
+    n = len(arr)
+    
+    def helper(idx, lst, k, sm):
+        if idx >= n:
+            if sm == k:
+                print(lst)
+                return True
+            else:
+                return False
+    
+        lst.append(arr[idx])
+        if helper(idx+1, lst, k, sm+arr[idx]):
+            return True
+        
+        lst.pop()
+        if helper(idx+1, lst, k, sm):
+            return True
+        
+        return False
+--------------------------------------------------------------------------------------
+
+
+ 4. COUNTING THE NUMBER OF SUBSEQUENCES:
+
+APPROACH:
+IN THE BASE CASE RETURN 1 IF CONDITION IS TRUE ELSE 0 IF FALSE
+FOR EACH RECURSION CALL STORE THE VALUE
+RETURN THE SUM OF BOTH VALUES AT THE END OF EACH CALL
+
+def subsSumK2(arr, k):
+    n = len(arr)
+    # Remove List as we Donot want to Print The List
+    def helper(idx, k, sm):
+        if idx >= n:
+            if sm == k:
+                return 1
+            return 0
+    
+        left = helper(idx+1, k, sm+arr[idx]) # Take
+        right = helper(idx+1, k, sm) # Not TAke
+        
+        return left+right
+        
+    return helper(0, k, 0)
+
+print(subsSumK2(arr, 2))
+
+----------------------------------------------------------------------------------
+
+5. MERGE SORT
+
+def merge(arr, low, mid, high):
+    lst = []
+    left, right = low, mid+1
+    
+    while left <= mid and right <= high:
+        if arr[left] <= arr[right]:
+            lst.append(arr[left])
+            left += 1
+        else:
+            lst.append(arr[right])
+            right += 1
+    
+    while left <= mid:
+        lst.append(arr[left])
+        left += 1 
+    
+    while right <= high:
+        lst.append(arr[right])
+        right += 1
+    
+    for i in range(low, high+1):
+        arr[i] = lst[i-low] 
+    
+    
+def mergeSort(arr, low, high):
+    if low >= high:
+        return
+    
+    mid = (low+high)//2
+    mergeSort(arr, low, mid)    # Left
+    mergeSort(arr, mid+1, high) ## Right
+    merge(arr, low, mid, high)
+    
+
+arr = [3,1,2,4,1,5,2,6,4]
+#arr = [3,1,2]
+#print(arr)
+mergeSort(arr, 0, len(arr)-1)
+print(arr)
+
+---------------------------------------------------------------------------
+
+5. QUICK SORT
+
+# STEP1: CHOOSE A PIVOT
+# STEP2: PLACE THE PIVOT AT ITS CORRECT POSITION
+# STEP3: SMALLER ON LEFT AND LARGER ON RIGHT OF PIVOT
+
+# HERE LETS CHOOSE THE PIVOT AS STARTING ELEMENT
+
+def helper(arr, low, high):
+    pivot = arr[low]
+    i, j = low, high
+    
+    while i < j:
+        while (arr[i] <= pivot) and (i <= high-1):
+            i += 1
+        
+        while (arr[j] > pivot) and (j >= low+1):
+            j -= 1
+        
+        if i < j:
+            arr[i], arr[j] = arr[j], arr[i]
+    
+    arr[low], arr[j] = arr[j], arr[low]
+    return j
+            
+def quickSort(arr, low, high):
+    if low < high:
+        partIdx = helper(arr, low, high) 
+        quickSort(arr, low, partIdx-1)
+        quickSort(arr, partIdx+1, high)
+        
+arr = [4,6,2,5,7,9,1,3]
+quickSort(arr, 0, len(arr)-1)
+print(arr)
+
+-------------------------------------------------------------------------
+
+6. COMBINATION SUM I
+
+GIVEN DISTINCT INTEGER ARRAY WHERE EACH ELEMENT CAN BE USED MULTIPLE TIMES TO ACHIEVE A COMBINATION WITH SUM EQUALS K
+
+APPROACH:
+WE TRY TO PICK AND NOT PICK AN ELEMENT (NOTE: AN ELEMENT CAN BE PICKED MULTIPLE NUMBER OF TIMES)
+CREATE FN F(IDX, TARGET, LST)
+(FOR EACH RECURSIVE CALL, EITHER TAKE THE ELEMENT AT IDX OR NOT TAKE IT)
+REC CALLS --> F(IDX, TARGET-ARR[IDX], LST) OR F(IDX+1, TARGET, LST)
+FOR THE FIRST CALL: CHECK IF TARGET-ARR[IDX] >= 0
+BASE CASE --> IDX == LEN(ARR) AND AFTER THAT TARGET == 0
+
+# COMBINATION SUM
+# TIME COMPLEXITY --> 2^N * K
+def combSum(arr, target):
+    n = len(arr)
+    ans = []
+    
+    def helper(idx, target, lst):
+        if idx == n:
+            if target == 0:
+                ans.append([el for el in lst])
+                print(lst)
+            return
+        
+        # Pick
+        lst.append(arr[idx])
+        if arr[idx] <= target:
+            helper(idx, target-arr[idx], lst)
+        lst.pop()
+        # NOT PICK
+	helper(idx+1, target, lst)
+    
+    helper(0, target, [])
+    print(ans)
+
+arr = [2,3,6,7]
+target = 7
+combSum(arr, target)
+
+---------------------------------------------------------------------------------------------------
+
+7. COMBINATION SUM II
+
+GIVEN AN ARRAY (DUPLICATES), FIND ALL UNIQUE COMBINATIONS THAT RESULT IN SUM OF K WHERE EACH ELEMENT OF ARRAY
+IS ONLY USED ONCE IN THE COMBINATION
+
+APPROACH ONE--> MODIFY THE ABOVE CODE 
+IF LST.SORT() NOT IN ANS --> ANS.APPENND(LST)
+FOR EVERY RECURSION CALL IDX+1
+
+APPROACH 2:
+def combinationSum(candidates, target):
+	# USING SUB SEQUENCES
+
+        # Sort the array
+        # from idx to n-1:
+        # start recursion ---> base case is target == 0
+        # additional cases --> similar start elements (duplicates)
+        #                       and el > target
+        # Note: Remove el from lst after recursion call
+
+        n = len(candidates)
+        candidates.sort()
+        ans = []
+        def helper(idx, target, lst):
+            if target == 0:
+                ans.append([el for el in lst])
+                return
+            
+            for i in range(idx, n):
+                if i > idx and candidates[i] == candidates[i-1]:
+                    continue
+                if candidates[i] > target:
+                    break
+                lst.append(candidates[i])
+                helper(i+1, target-candidates[i], lst)
+                lst.pop()
+        
+        helper(0, target, [])
+        return ans
+	
+---------------------------------------------------------------------------------------------
+
+8. SUBSET SUM
+
+# APPROACH:
+# FOR EACH IDX, CHOOSE TO EITHER ADD IT TO THE SUM OR NOT ADD IT
+
+def subsetSum(arr):
+    n = len(arr)
+    ans = []
+    def helper(idx, sm):
+        if idx == n:
+            ans.append(sm)
+            return
+        
+        helper(idx+1, sm+arr[idx])
+        helper(idx+1, sm)
+    
+    helper(0, 0)
+    ans.sort()
+    return ans
+    
+arr = [3,1,2]
+print(subsetSum(arr))
+
+--------------------------------------------------------------------------------------
+
+9. SUBSET II
+
+GENERATE ALL UNIQUE SUBSETS GIVEN AN ARRAY THAT MAY CONTAIN DUPLICATES
+
+def subs(nums):
+    nums.sort()
+    n = len(nums)
+    ans = []
+    def fn(idx, lst):
+        ans.append([el for el in lst])
+        for i in range(idx, n):
+            if i != idx and nums[i-1] == nums[i]:
+                continue
+            lst.append(nums[i])
+            fn(i+1, lst)
+            lst.pop()
+    fn(0, [])
+    return ans
+
+arr = [1,2,2]
+print(subs(arr))
+
+---------------------------------------------------------------------------------
+
+
+10. PRINT ALL PERMUTATIONS
+
+APPROACH 1:
+USING A FREQ/MAP
+FOR EACH INDEX WE WILL TAKE SINGLE ELEMENT IN EACH CALL
+BASE CASE --> LST.SIZE == N
+
+arr = [1,2,3]
+
+def printPerms(arr):
+    n = len(arr)
+    ans = []
+    freq = [0 for i in range(n)]
+    def helper(lst, freq):
+        if len(lst) == n:
+            ans.append([el for el in lst])
+            return
+        
+        for i in range(n):
+            if not freq[i]:
+                freq[i] = 1
+                lst.append(arr[i])
+                helper(lst, freq)
+                lst.pop()
+                freq[i] = 0
+    helper([], freq)
+    return ans
+    
+a = printPerms(arr)
+print(a)
+
+
+APPROACH 2:
+FOR EACH IDX, SWAP IT WITH EVERY OTHER IDX IN EACH CALL
+FN(IDX) ---> IF IDX == N: PRINT ANS RETURN
+FOR I = IDX TO N:
+SWAP(ARR[IDX], ARR[I])
+RECURSIVE CALL
+
+arr = [1,2,3]
+
+def printPerms1(arr):
+    ans = []
+    n = len(arr)
+    def helper(idx, arr):
+        if idx == n:
+            ans.append([el for el in arr])
+            return
+        
+        for i in range(idx, n):
+            arr[idx], arr[i] = arr[i], arr[idx]
+            helper(idx+1, arr)
+            arr[idx], arr[i] = arr[i], arr[idx]
+            
+    helper(0, arr)
+    return ans
+
+a = printPerms(arr)
+print(a)
+
+----------------------------------------------------------------------------------
+
+11. BACKTRACKING -- NQUEENS
+
+APPROACH 1:
+CREATE A RECURSIVE FUNCTION WHERE WE TRY TO PLACE A QUEEN AT EACH ROW FOR ONE COLUMN
+CHECK IF WE CAN ACTUALLY PLACE THE QUEEN AT THAT POSITION BY CHECKING THE LEFT, UPPER LEFT DIAGONAL
+LOWER RIGHT DIAGONAL POSITION
+AFTER THE RETURN OF EACH RECURSION CALL, REMOVE THE MODIFICATION MADE (BACKTRACKING)
+
+TC = 4O(N)
+
+# N- Queens
+
+def isSafe(row, col, board, n):
+    dupRow = row
+    dupCol = col
+    
+    while row >= 0 and col >= 0:
+        if board[row][col] == 'Q':
+            return False
+        row -= 1
+        col -= 1
+    
+    col = dupCol
+    row = dupRow
+    while col >= 0:
+        if board[row][col] == 'Q':
+            return False
+        col -= 1
+    
+    row = dupRow
+    col = dupCol
+    while row < n and col >= 0:
+        if board[row][col] == 'Q':
+            return False
+        row += 1
+        col -= 1
+    
+    return True
+
+def solve(col, board, ans, n):
+    if col == n:
+        #print(board)
+        nA = [''.join(el for el in board[i]) for i in range(n)]
+        ans.append(nA)
+        return
+    
+    for row in range(n):
+        if isSafe(row, col, board, n):
+            board[row][col] = 'Q'
+            solve(col+1, board, ans, n)
+            board[row][col] = '.'
+            
+
+def nQueens(n):
+    ans = []
+    board = [['.' for i in range(n)] for j in range(n)]
+    solve(0, board, ans, n)
+    return ans
+    
+    
+print(nQueens(4))
+
+
+APPROACH 2:
+FOR IS SAGE FUNCTION
+MAINTAIN SOME KIND OF HASHING
+
+FOR LEFT--> CREATE A LIST OF N VALUES REPRESENTING ROWS AND FOR EACH CALL HASH THE POSITION OF QUEEN
+EX: [0,0,1,0] --> QUEEN PRESENT IN 3RD ROW 
+
+FOR LOWER DIAGONAL ---> CREATE A LIST OF 2*N-1--> FOR EACH QUEEN PLACED, HASH THE POSITION OF ROW+COL 
+INDICATING THE PRESENCE OF QUEEN ON LOWER DIAGONAL
+
+FOR UPPER DIAGONAL ---> CREATE A LIST OF 2*N - 1--> FOR EACH QUEEN PLACED, HASH THE POSITION OF (N-1) + (COL-ROW)
+INDICATING THE PRESENCE OF QUEEN ON UPPER DIAGONAL
+
+def solve(col, board, ans, leftRow, upperDiag, lowerDiag, n):
+    if col == n:
+        ans.append([''.join(el for el in board[i]) for i in range(n)])
+        return
+    
+    for row in range(n):
+        if leftRow[row] == 0 and lowerDiag[row+col] == 0 and upperDiag[n-1+col-row] == 0:
+            board[row][col] = 'Q'
+            leftRow[row] = 1
+            lowerDiag[row+col] = 1
+            upperDiag[n-1+col-row] = 1
+            solve(col+1, board, ans, leftRow, upperDiag, lowerDiag, n)
+            board[row][col] = '.'
+            leftRow[row] = 0
+            lowerDiag[row+col] = 0
+            upperDiag[n-1+col-row] = 0
+            
+            
+    
+def nQueens(n):
+    ans = []
+    board = [['.' for i in range(n)] for j in range(n)]
+    leftRow = [0] * n
+    upperDiag = [0] * (2*n - 1)
+    lowerDiag = [0] * (2*n - 1)
+    
+    solve(0, board, ans, leftRow, upperDiag, lowerDiag, n)
+    return ans
+    
+print(nQueens(4))
+
+----------------------------------------------------------------------------------------------
+
+12.  SUDOKU SOLVER
+
+APPRAOCH:
+TRY OUT ALL POSSIBLE COMBS
+CREATE A RECURSIVE FUNCTION SOLVE(BOARD)
+IN EACH CALL CHECK FOR THE EMPTY POSITION
+TRY OUT EVREY NUMBER FROM 1 TO 9 WITH THEIR VALIDITY
+AFTER EACH TRY CALL CALL THE FUN AND IF IT RETURNS TRUE--->RETURN TRUE
+ELSE, EMPTY THE POSITION OF THAT CALL FROM NUMBER TO NOTHING
+
+
+board = [
+    ["5","3",".",".","7",".",".",".","."],
+    ["6",".",".","1","9","5",".",".","."],
+    [".","9","8",".",".",".",".","6","."],
+    ["8",".",".",".","6",".",".",".","3"],
+    ["4",".",".","8",".","3",".",".","1"],
+    ["7",".",".",".","2",".",".",".","6"],
+    [".","6",".",".",".",".","2","8","."],
+    [".",".",".","4","1","9",".",".","5"],
+    [".",".",".",".","8",".",".","7","9"]
+]
+
+
+def isValid(board, row, col, chr):
+    for i in range(9):
+        if board[i][col] == chr:
+            return False
+        
+        if board[row][i] == chr:
+            return False
+        
+        if board[3 * (row // 3) + i // 3][3 * (col // 3) + i % 3] == chr:
+            return False
+
+    return True
+
+
+def solve(board):
+    for i in range(len(board)):
+        for j in range(len(board[0])):            
+            if board[i][j] == ".":
+                for c in range(1,10):
+                    if isValid(board, i, j, str(c)):
+                        board[i][j] = str(c)
+
+                        if solve(board) == True:
+                            return True
+                        else:
+                            board[i][j] = '.'
+
+                return False
+    return True
+
+
+print("Before Solving: ")
+for row in board:
+    print(row)
+print("----------------------------------------------------")
+solve(board)
+print("After Solving:")
+for row in board:
+    print(row)
+
+
+--------------------------------------------------------------------------------------------
+
+13. M-COLORING PROBLEM
+
+COLOR THE NODES OF THE GRAPH WITH AT MOST M COLORS SUCH THAT NO TWO CONNECTED NODES HAVE THE SAME COLOR
+
+APPROACH:
+TRY OUT EVERY POSSIBLE COLOR
+FOR NODE = 0 TO N:
+IF NODE == N --> RETURN TRUE (BASE CASE)
+
+FOR COLOR 1 TO M 
+--> CHECK IF WE CAN COLOR NODE N:
+--->IF TRUE THEN COLOR[NODE] = I --> CALL THE RECURSION
+----->IF RECURSION GIVES TRUE-->RETURN TRUE
+-----> ELSE DISCOLOR THE NODE
+
+
+def isSafe(node, color, graph, n, col):
+    for neighbor in graph[node]:
+        if color[neighbor] == col:
+            return False
+    return True
+
+def solve(node, color, m, n, graph):
+    if node == n:
+        return True
+    
+    for i in range(1, m+1):
+        if isSafe(node, color, graph, n, i):
+            color[node] = i
+            if solve(node+1, color, m, n, graph):
+                return True
+            color[node] = 0
+    
+    return False
+
+def graphColoring(edges, m, n):
+    graph = {}
+    for u, v in edges:
+        if u not in graph:
+            graph[u] = []
+        if v not in graph:
+            graph[v] = []
+        graph[u].append(v)
+        graph[v].append(u)
+
+    color = [0] * (n+1)
+    if solve(0, color, m, n, graph):
+        return True
+    return False
+
+edges = [[0,1],[0,2],[0,3],[1,2],[1,3]]
+print(graphColoring(edges, 4, 4))
+
+------------------------------------------------------------------------------
+
+14. PALINDROMIC PARTITIONING
+
+PARTION THE GIVEN STRING SUCH THAT EVERY SUBSTRING IS A PALINDROM
+
+APPROACH:
+FOR EACH INDEX TRY TO PARTITION THE STRING
+FUN(S, IDX, LST)
+BASE CASE--> IF IDX == LEN(S):--->APPEND THE LST TO ANS (LST STORES CURRENT PALINDROME)
+FOR I FROM IDX TO LEN(S):
+--> IF ISPALINDROME(S, IDX, I+1) 
+	---> LST.ADD(S[IDX:I+1]
+	---> FUNC(S, IDX+1, LST)
+	---> LST.POP()
+
+# PLAINDROME PARTITIONING
+def isPalindrome(s, st, en):
+    string = s[st:en+1]
+    return string == string[::-1]
+
+def palindromePart(s):
+    ans = []
+    
+    def func(idx, s, path):
+        if idx == len(s):
+            ans.append([el for el in path])
+            return
+
+        for i in range(idx, len(s)):
+            if isPalindrome(s, idx, i):
+                path.append(s[idx: i+1])
+                func(i+1, s, path)
+                path.pop()
+    
+    func(0, s, [])
+    return ans
+
+
+print(palindromePart("aab"))
+
+-------------------------------------------------------------------------------------------------
+
+15. KTH PERMUTATION
+
+PRINT THE KTH PERMUTATION OF FIRST N NATURAL NUMBERS IN SORTED ORDER
+
+APPROACH 1 (NAIVE):
+USING THE BASIC RECURSION, CREATE ALL THE PERMUTATIONS AND RETURN THE K-1TH PERMUTATION
+TC = O(N!) * O(N) + O(NLOGN)
+SC = O(N) + O(N)
+
+
+def printPerms1(arr):
+    ans = []
+    n = len(arr)
+    def helper(idx, arr):
+        if idx == n:
+            ans.append([el for el in arr])
+            return
+        
+        for i in range(idx, n):
+            arr[idx], arr[i] = arr[i], arr[idx]
+            helper(idx+1, arr)
+            arr[idx], arr[i] = arr[i], arr[idx]
+            
+    helper(0, arr)
+    ans.sort()
+    return str(ans[k-1])
+
+
+APPROACH 2 (OPTIMAL):
+AS THE ARRAY IS SORTED, TOTAL PERMUTATIONS = N!
+DIVIDING N!/(K-1) = IDX, TAKE THE FIRST POSITION OF OUR PERMUTATION AS ARRAY[IDX]
+REMOVE THIS ELEMENT
+NOW THE PROBLEM IS TO FIND THE K%FACT TH PERMUTATION IN THE NEW ARRAY
+BASE CASE/ STOPPING CONDITION --> IF LEN(ARRAY) == 0
+
+n = 4
+k = 17
+
+
+def getPerm(n, k):
+    fact = 1
+    numbers = []
+    for i in range(1, n):
+        fact = fact*i
+        numbers.append(i)
+    numbers.append(n)
+    ans = ""
+    k -= 1
+    while True:
+        ans += str(numbers[int(k /fact)])
+        numbers.pop(int(k / fact))
+        if len(numbers) == 0:
+            break
+        k %= fact
+        fact /= len(numbers)
+    
+    return ans
+
+print(getPerm(n, k))
+
+-------------------------------------------------------------------------------------------
+
+16. RAT IN A MAZE 
+
+GIVEN A MATRIX OF N*N SIZE, A RAT IS PLACED AT 0,0 AND HAS TO REACH ITS DESTINATION N-1, N-1
+MATRIX IS A BINARY MATRIX WHERE 0 DENOTES THAT PATH IS BLOCKED
+RAT CAN TRAVEL IN 4 DIRECTIONS (UP, DOWN, LEFT, RIGHT)
+FIND ALL POSSIBLE PATHS RAT CAN TAKE IN SORTED ORDER
+
+
+APPROACH:
+TRY OUT EVERY POSSIBLE PATH
+
+def solve(i, j, maze, n, ans, move, visited):
+    if i == n-1 and j == n-1:
+        ans.append(move)
+        return
+    
+    dr = [1, 0, 0, -1]
+    dc = [0, -1, 1, 0]    
+    dir = ['D', 'L', 'R', 'U']
+
+    for k in range(4):
+        nrow = i + dr[k]
+        ncol = j + dc[k]
+        
+        rowInbounds = (0 <= nrow and nrow < n)
+        colInbounds = (0 <= ncol and ncol < n)
+
+        if rowInbounds and colInbounds:
+            if visited[nrow][ncol] == 0 and maze[nrow][ncol] == 1:
+                visited[nrow][ncol] = 1
+                solve(nrow, ncol, maze, n, ans, move+dir[k], visited)
+                visited[nrow][ncol] = 0
+
+
+def paths(maze):
+    n = len(maze)
+    ans = []
+    visited = [[0 for i in range(n)] for j in range(n)]
+    if maze[0][0] == 1:
+        solve(0, 0, maze, n, ans, "", visited)
+    return ans
+
+
+maze = [
+    [1,0,0,0],
+    [1,1,0,1],
+    [1,1,0,0],
+    [0,1,1,1]
+]
+print(paths(maze))
+
+----------------------------------------------------------------------------------------------
+

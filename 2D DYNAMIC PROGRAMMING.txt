@@ -1,0 +1,527 @@
+2D DYNAMIC PROGRAMMING
+
+1. UNIQUE PATHS
+
+GIVEN A 2D MATRIX, FIND THE POSSIBLE UNIQUE PATHS BY WHICH WE CAN REACH THE BOTTOM RIGHT CORNER FROM
+TOP LEFT CORNER
+
+APPROACH:
+WE CAN PERFORM A RECURSIVE DFS, AND CACHE THE RESULT OF EVERY POSITION
+CACHE WILL STORE NUMBER OF WAYS TO REACH DESTINATION FROM THAT POSITION
+
+FROM START WE CAN GO TO RIGHT OR DOWN
+TO CALCULATE DOWN WE CAN GO TO RIGHT OR DOWN IF POSSIBLE
+THUS UNIQUE PATHS FROM START WILL BE UNIQUE PATHS FROM START+RIGHT AND START+DOWN
+
+TO START OUR BASE CASE WILL BE OUR DESTINATION
+TO REACH DESTINATION FROM DESTINATION UNIQUE POSSIBLE WAYS IS 1
+THIS WILL BE OUR BASE CASE
+
+NOW WE WILL CREATE A DP OF SIZE N+1 * N+1
+AND WE WILL PADD THE END ROW AND COLUMN WITH 0
+DP[N-1][N-1] = 1 // BASE CASE
+DP[I][J] = DP[I+1][J] + DP[I][J+1]
+
+
+BUT WE CAN REDUCE MEMORY BY ONLY STORING THE ROW VALUES
+INITIALIZE ROW OF SIZE N WITH 1
+I. FOR I FROM 0 TO M-1
+II. INITIALIZE A NEW_ROW = [1] * N (SIMILAR TO ROW)
+III.  FOR J FROM N-2 TO 0
+IV.      NEW_ROW[J] = NEW_ROW[J+1] + ROW[J]
+V.    ROW = NEW_ROW
+RETURN ROW[0]
+
+TC O(N * M) ---- SC O(M)
+
+----------------------------------------------------------------------------------------------------
+
+2. LONGEST COMMON SUBSEQUENCE
+
+
+APPROACH:
+WE NEED TO FIND THE LCS FOR 2 STRINGS
+SUPPOSE THE STRINGS ARE S1 = ABCDE AND S2 = ACE
+
+NOW WE SEE THAT S1[0] == S2[0]
+TO ANS THE LCS WE CAN SAY LCS = 1 + LCS(BCDE, CE)
+SIMILARLY WE CAN SOLVE DIFFERENT SUB PROBLEMS
+EX. FOR BCDE AND CE, THE B != C
+THUS, 2 SUBPROBLEMS ARE BCDE AND E,  &    CDE AND CE
+THE ANS WILL BE MAX OF THESE TWO
+
+(BOTTOM UP APPROACH)
+TO SOLVE IT USING DP
+WE CREATE A 2D DP ARRAY OF SIZE LEN(S1) + 1 * LEN(S2) + 1
+WE WILL INITIIALIZE THE END ROW AND COLUMN WITH 0 AS ITS AN OUT OF BOUNDS SITUATION
+AND WE WILL START FROM THE INDEX LEN(S1)-1, LEN(S2)-1
+FOR I FROM N-1 TO 0:
+   FOR J FROM M-1 TO 0:
+	IF S1[I] == S2[J]:
+	   DP[I][J] = 1 + MAX(DP[I+1][J], DP[I][J+1])
+	ELSE
+	   DP[I][J] = MAX(DP[I+1][J], DP[I][J+1])
+
+TC O(LEN(S1) * LEN(S2)) == SC
+
+def longestCommonSubsequence(self, text1: str, text2: str) -> int:
+        m, n = len(text1), len(text2)
+        dp = [[0] * (n+1)] * (m+1)
+
+        for i in range(m-1, -1, -1):
+            for j in range(n-1, -1, -1):
+                if text1[i] == text2[j]:
+                    dp[i][j] = 1 + max(dp[i+1][j], dp[i][j+1])
+                else:
+                    dp[i][j] = max(dp[i+1][j], dp[i][j+1])
+        
+        return dp[0][0]
+
+----------------------------------------------------------------------------------------------------
+
+3. BEST TIME TO BUY AND SELL STOCKS WITH COOLDOWN
+
+RULES:
+YOU CANNOT BUY AND SELL ON THE SAME DAY
+YOU HAVE WAIT FOR AT LEAST 1 DAY AFTER SELLING (COOLDOWN)
+
+
+APPROACH:
+WE CAN HAVE RECURSIVE SOLUTION 
+SUPPOSE I = 0, PROFIT = 0
+BASE CASE IS I == LEN(PRICES): --> RETURN PROFIT
+NOW FOR THE RECURSIVE CALL
+FOR I = 0, WE CAN EITHER BUY  OR NOT BUY (COOLDOWN)
+THUS REC CALL WILL BE REC(I+1, PRF-PRICES[I]) --> BUY CASE
+		      REC(I, PRF) ---> COOLDOWN CASE
+NOW AFTER BUYING WE CAN EITHER SELL IT OR HAVE A COOL DOWN
+		      REC(I+1, PRF+PRICES[I]) --> SELL CASE
+		      REC(I, PRF) ---> COOLDOWN
+AFTER SELL, AT LEAST 1 COOLDOWN IS MANDATORY REC(I, PRF)
+AND WE CAN AGAIN HAVE A COMBINATION LIKE THESE
+
+THUS IF WE CAN START BY EITHER BUYING OR COOOLDOWN
+AFTER A COOLDOWN IF WE HAVE A PREVIOUS BUY, WE CAN HAVE A COOLDOWN OR SELL
+AFTER A BUY WE CAN HAVE COOLDOWN OR SELL
+AFTER A SELL, A 1 COOLDOWN IS MANDATORY
+
+AT THE END, WE CAN RETURN THE MAX OF PROFIT
+
+TC = 2^N N IS SIZE OF DECISION TREE
+
+OPTIMIZATION
+WE CAN USE CACHING TO REDUCE THE TC
+AND HAVE A BOOLEAN ARGUMENT FOR BUY/SELL
+IF BUY --> I+1
+IF SELL --> I+2
+KEEP A BOOLEAN BUYING
+LET THE CACHE BE A MAP CALLED DP = {}
+
+I--> CURRENT INDEX 
+REC(I, BUYING):
+	IF I >= LEN(ARR) -- > RETURN 0
+	IF (I, BUYING) IN DP --> RETURN DP[(I, BUYING)]
+	COOLDOWN = REC(I, BUYING)
+	IF BUYING: (I.E IF WE ARE BUYING)
+		DP[(I, BUYING)] = MAX(COOLDOWN, REC(I+1, !BUYING) - ARR[I]) // CACHING
+	ELSE: (I.E IF WE ARE SELLING_
+		DP[(I, BUYING)] = MAX(COOLDOWN, REC(I+2, !BUYING) + ARR[I] // CACHING
+	RETURN DP[(I, BUYING)]
+
+
+def maxProfit(self, prices: List[int]) -> int:
+        dp = {} # key = (i, bool) val = max_profit
+
+        def dfs(i, buying):
+            if i >= len(prices):
+                return 0
+            
+            if (i, buying) in dp:
+                return dp[(i, buying)]
+            
+            cooldown = dfs(i+1, buying)
+            if buying:
+                buy = dfs(i+1, not buying) - prices[i]
+                dp[(i, buying)] = max(buy, cooldown)
+            else:
+                sell = dfs(i+2, not buying) + prices[i]
+                dp[(i, buying)] = max(sell, cooldown)
+            
+            return dp[(i, buying)]
+
+        return dfs(0, True)
+
+----------------------------------------------------------------------------------------------------
+
+4. COIN CHANGE 2
+
+APPROACH:
+THE BASIC RECURSIVE APPROACH IS AS FOLLOWS:
+WE CAN MAKE AT MOST N DECISIONS
+BUT TO NOT HAVE DUPLICATE COMBINATION, WE IMPOSE THE FOLLOWING CONDITION
+THE ITH DECISION WILL NEVER INCLUDE I-1TH ELEMENT
+SUPPOSE COINS = [1,2,5] , AMT = 5
+FOR OUR 1ST DECISION WE HAVE 1, 2, 3
+IF WE GO DOWN THE PATH WITH ONE, WE WILL HAVE A COMBINATION LIKE 1 + 2 + 2
+BUT GIVEN OUR CONDITION AFTER THE END OF THIS COMPLETE CALL WHEN WE MOVE TO 2
+SINCE 2 CANNOT HAVE 1 IN ITS DECISION, CASE LIKE 2 + 1 + 2 WILL NEVER OCCUR THUS PRESERVING COMBINATIONS
+THIS CAN BE IMPLEMENTED USING A POINTER I
+TC = O(M^N)
+
+
+MEMOIZATION/CACHING
+A = CURR_AMT, I = CURR_IDX
+CREATA A CAHCE = {}
+CNT = 0
+DFS(I, A):
+	IF A > AMT: -- > RETURN 0 
+	IF A == AMT -- > RETURN 1
+	
+	CREATE A MEMOIZATION CALL
+
+	FOR J IN RANGE(I, LEN(ARR):
+		CNT += DFS(J, A+ARR[J])
+		CACHE IT IN DP
+		
+AFTER CACHING THE TC WILL BE O(N * M)
+
+
+def change(self, amount: int, coins: List[int]) -> int:
+# Recusive 
+        cache = {}
+
+        def dfs(i, a):
+            if a == amount:
+                return 1
+            
+            if a > amount:
+                return 0
+
+            if i == len(coins):
+                return 0
+
+            if (i, a) in cache:
+                return cache[(i,a)]
+            
+            cache[(i,a)] = dfs(i, a+coins[i]) + dfs(i+1, a)
+            return cache[(i, a)]
+
+        return dfs(0, 0)
+
+
+
+TABULATION/DP APPROACH:
+WE CAN HAVE A DP OF LEN(ARR) * AMT+1 
+AND WE CAN INITIALIZE IT WITH 1 I.E THE 0TH COLUMN AND LAST ROW
+THAT MEANS NUMBER OF WAYS TO GET AMT OF 0 USING ANY COIN IS 0
+
+NOW IN TO GET AMT OF 1 FROM COIN OF 5 WE WILL LOOK AT DP[ROW][-1] AND DP[-1][COL] 
+WHICH ARE OUTOFBOUNDS --> DP[][] = 0
+NOW FOR A GENERAL CASE DP[I][J] = DP[I][J-AMT] + DP[I-1][J]
+
+THIS SOL WILL HAVE A SC OF O(M * N)
+WE CAN REDUCE THIS BY STORING ONLY ONLY 2 ROWS.
+AS WE ARE ONLY LOOKING TO RIGHT AND DOWN, THUS ITS NOT NEEDED FOR US TO STORE THE COMPLETE DP
+
+def change(self, amount: int, coins: List[int]) -> int:
+	dp = [0] * (amount+1)
+        dp[0] = 1 
+
+        for i in range(len(coins) - 1, -1, -1):
+            nextDP = [0] * (amount+1)
+            nextDP[0] = 1
+
+            for a in range(1, amount + 1):
+                nextDP[a] = dp[a]
+                if a - coins[i] >= 0:
+                    nextDP[a] += nextDP[a - coins[i]]
+            dp = nextDP
+        return dp[amount]
+
+----------------------------------------------------------------------------------------------------
+
+5. TARGET SUM
+
+QUESTION EXPLANATION
+GIVEN AN ARRAY OF NUMBERS, WE CAN EITHER ADD OR SUBTRACT EACH OF THEM IN ANY ORDER
+RETURN THE NUMBER OF POSSIBLE WAYS IN WHICH ADDING OR SUBTRACTING WILL RESULT IN TARGET
+
+APPROACH:
+(BRUTE FORCE)
+SUPPOSE ARR = [1,1,1,1,1,1] AND TARGET = 3
+WE CAN USE RECURSION TO SOLVE THIS I.E WE START FROM INDEX 0.
+AT EACH INDEX WE CAN EITHER ADD IT OR SUBTRACT
+THIS WILL GIVE US A DECISION TREE WITH 2 DECISIONS AND N DEPTH
+REC(IDX, TOTAL)
+	IF IDX == LEN(ARR):
+	   IF TOTAL == TARGET:
+		RETURN 1
+	   RETURN 0
+	
+	RETURN REC(IDX+1, TOTAL-ARR[IDX]) + REC(IDX+1, TOTAL+ARR[IDX])
+REC(0,0)
+TC: 2^N
+
+
+OPTIMIZATION (CACHING)
+WE CAN USE CACHING IN OUR RECURSIVE BRUTE FORCE SOLUTION TO OPTIMIZE IT
+THE MAX RANGE OF TOTAL CAN BE +/- SUM(ARR)
+THUS THERE CAN BE AT MAX SUM(ARR) TOTAL AND N INDEXES ---> TC O(N*T)
+T = TOTAL
+WE CAN CACHE THE NUMBER OF UNIQUE WAYS TO REACH THE TARGET WITH INDEX I AND TOTAL T
+MAP[(IDX, TOTAL)] = NUM_WAYS
+
+
+def findTargetSumWays(self, nums: List[int], target: int) -> int:
+        dp = {}
+
+        def dfs(idx, total):
+            if idx == len(nums):
+                return 1 if total == target else 0
+            
+            if (idx, total) in dp:
+                return dp[(idx, total)]
+            
+            dp[(idx, total)] = (dfs(idx+1, total+nums[idx]) 
+                                + dfs(idx+1, total-nums[idx]))
+            
+            return dp[(idx, total)]
+        
+        return dfs(0, 0)
+
+----------------------------------------------------------------------------------------------------
+
+6. INTERLEAVING STRING
+
+QUESTION EXPLANATION
+GIVEN STRING S1, S2 AND S3. RETURN WHETHER S3 IS FORMED BY INTERLEAVING S1 AND S2
+
+INTERLEAVING S1 AND S2 MEANS THAT S3 CONSISTS OF SUBSTRINGS OF S1 AND S2 WHERE RELATIVE ORDER OF CHARACTERS OF EACH OF THE STRINGS IS MAINTAINED
+
+APPROACH:
+(BRUTE FORCE)
+SUPPOSE S1 = AABCC, S2 = DBBCA, S3 = AADBBCBCAC
+WE CAN HAVE A RECURSIVE FUNCTION
+WE HAVE 2 POINTERS I1 = I2 = 0 FOR S1 AND S2
+FOR S3 THE POINTER CAN BE FOUND USING I1+I2
+WE WILL START FROM (0, 0) I.E I1 = 0, I2 = 0
+NOW IF S3[I1+I2] == S1[I1] OR S1[I2]
+IF ITS EQUAL TO ONLY ONE OF THEM, WE HAVE A SINGLE DECISION I.E REC(I1+1, I2) OR REC(I1, I2+1)
+BUT IN CASE ITS EQUAL TO BOTH OF THEM, THEN WE WILL HAVE 2 DECISIONS
+I.E REC(I1+1, I2) AND REC(I1, I2+1)
+THUS, FOLLOWING THIS PATH WE WILL GET OUR TC = O(2^N)
+
+
+(OPTIMIZATION USING MEMOIZATION/CACHING)
+WE CAN OPTIMIZE THIS USING THE CACHING TECHNIQUE
+FOR EACH INDEX OF S1, WE CAN CHOOSE EVERY OTHER INDEX OF S2
+THUS WE CAN CACHE I1, I2 FROM OUR ABOVE SOLUTION STORING WHETHER WE GET TRUE OR NOT
+WE GET TC = O(N * M)
+IF WE GET A SINGLE TRUE, WE JUST HAVE TO RETURN THE RESULT
+
+BUT IN THE CODE BELOW, WE HAVE TO TAKE CARE OF ALL THE EDGE CASES WHERE S1, S2, AND S3 CAN BE EMPTY
+
+def isInterleave(self, s1: str, s2: str, s3: str) -> bool:
+        dp = {}
+
+        def dfs(i, j):
+            if i == len(s1) and j == len(s2):
+                return True
+            
+            if (i, j) in dp:
+                return dp[(i, j)]
+
+            if i < len(s1) and s1[i] == s3[i+j] and dfs(i+1, j):
+                return True
+            if j < len(s2) and s2[j] == s3[i+j] and dfs(i, j+1):
+                return True
+            dp[(i, j)] = False
+            return False
+        
+        return dfs(0, 0)
+
+
+(TRUE DP SOLUTION/ TABULATION)
+FOR TABULATION WE WILL HAVE THE MATRIX OF LEN(S1)+1 * LEN(S2)+1
+WE WILL MARK THE LAST OUTOFBOUNDS INDEX I.E DP[LEN(S1)][LEN(S2) = TRUE BECAUSE
+THIS INDICATES OUR BASE CASE I.E IF HAVE 2 EMPTY STRINGS WE CAN CREATE AN INTERLEAVING EMPTY STRING
+
+NOW WILL MOVE UP FROM THIS INDEX TO 0, 0
+THE CONDITIONS WILL SAME AS IN THE MEMOIZATION
+I.E IF I IS INBOUNDS (I < LEN(S1)) AND S1[I] == S3[I+J] AND DP[I+1][J] == TRUE ---> DP[I][J] = TRUE
+ALSO IF J IS INBOUNDS (J < LEN(S2)) AND S2[I] == S3[I+J] AND DP[I][J+1] == TRUE --> DP[I][J] = TRUE
+ELSE FALSE (BUT WHOLE MATRIX IS INITIALIZED AS FALSE SO NO NEED)
+ALSO THE ABOVE TWO IF STATEMENTS ARE INDEPENDENT
+FINALLY RETURN THE DP[0][0]
+
+
+def isInterleave(self, s1: str, s2: str, s3: str) -> bool:
+        if len(s1) + len(s2) != len(s3):
+            return False
+
+        dp = [[False] * (len(s2) + 1) for i in range(len(s1) + 1)]
+        dp[len(s1)][len(s2)] = True
+
+        for i in range(len(s1), -1, -1):
+            for j in range(len(s2), -1, -1):
+                if i < len(s1) and s1[i] == s3[i+j] and dp[i+1][j]:
+                    dp[i][j] = True
+                if j < len(s2) and s2[j] == s3[i+j] and dp[i][j+1]:
+                    dp[i][j] = True
+        
+        return dp[0][0]
+
+------------=--------------------------------------------------=------------------------------------
+
+7. LONGEST INCREASING PATH IN A MATRIX
+
+APPROACH:
+THE MOST BASIC AND BRUTE FORCE WAY TO SOLVE THIS IS TO PERFORM DFS ON EVERY CELL
+AND CALCULATE THE LIP(LONGEST INCREASING PATH)
+BUT TO MAKE IT MORE EFFICIENT, WE CAN ACTUALLY STORE EACH OF THE DFS CALL SUCH WE CAN USE THEM LATER
+THIS WILL MAKE OUR TC = O(N * M) = SC
+
+WHEN WE PERFORM DFS ON MATRIX, WE WILL ENCOUNTER MANY POSSIBLE CELLS.
+IF WE CACHE THEIR VALUES, THIS WILL REDUCE OUR COMPLEXITY
+
+def longestIncreasingPath(self, matrix: List[List[int]]) -> int:
+        rows, cols = len(matrix), len(matrix[0])
+        dp = {}
+
+        def dfs(r, c, prevVal):
+            if (r < 0 or r == rows or 
+                c < 0 or c == cols or 
+                matrix[r][c] <= prevVal):
+                return 0
+            
+            if (r,c) in dp:
+                return dp[(r,c)]
+            
+            # Min LIP for every node is at least 1 i.e itself
+            res = 1
+            res = max(res, 1 + dfs(r+1, c, matrix[r][c]))
+            res = max(res, 1 + dfs(r-1, c, matrix[r][c]))
+            res = max(res, 1 + dfs(r, c+1, matrix[r][c]))
+            res = max(res, 1 + dfs(r, c-1, matrix[r][c]))
+            dp[(r,c)] = res
+            return res
+
+        for r in range(rows):
+            for c in range(cols):
+                dfs(r,c, -1)
+        
+        return max(dp.values())
+----------------------------------------------------------------------------------------------------
+
+8. DISTINCT SUBSEQUENCES
+
+
+QUESTION EXPLANATION:
+GIVEN STRING S AND T, GIVE THE NUMBER OF SUBSEQUENCES OF S THAT CAN FORM THE COMPLETE STRING T
+
+
+APPROACH: (PREREQ: LCS)
+WE START FROM 0TH INDEX OF BOTH STRINGS
+NOW IF THEY MATCH WE CAN MOVE UP BY 1 FOR BOTH 
+OR WE CAN HAVE A CASE WHERE WE CAN MOVE UP PTR FOR S IF NEXT IDX OF S AND CURR IDX OF T ARE EQUAL
+THIS WILL CREATE A DFS SITUATION
+WE CAN CACHE THIS
+
+SUPPOSE PTR FOR S IS I AND FOR T IS J
+IF S[I] == T[I] --> EITHER (I+1, J+1) OR (I+1, J)
+ELSE (I+1, J)
+
+EDGE CASE AND BASE CASE:
+IF T == "" RETURN 1
+IF T != "" AND S == "" RETURN 0
+IF T == S == "" RETURN 1
+
+TC = O(LEN(S) * LEN(T)) = SC
+
+def numDistinct(self, s: str, t: str) -> int:
+        dp = {}
+
+        def dfs(i, j):
+            if j == len(t):
+                return 1
+            
+            if i == len(s):
+                return 0
+
+            if (i, j) in dp:
+                return dp[(i, j)]
+
+            if s[i] == t[j]:
+                dp[(i,j)] = dfs(i + 1, j + 1) + dfs(i + 1, j)
+            else:
+                dp[(i, j)] = dfs(i + 1, j)
+            
+            return dp[(i,j)]
+        
+        return dfs(0, 0)
+----------------------------------------------------------------------------------------------------
+
+9. EDIT DISTANCE
+
+QUESTION EXPLANATION:
+GIVEN 2 WORDS, WORD1 AND WORD2. GIVE THE MIN NUM OF OPERATIONS TO CONVERT WORD1 TO WORD2
+OPERATIONS: INSERT A CHAR, DELETE A CHAR, REPLACE A CHAR
+
+APPRAOCH:
+LETS START BY ANALYSING SOME BASE CASES
+SUPPOSE WRD1 = WRD2 = "": THEN THE MIN_OPS = 0
+NOW IF WRD1 IS NOT EMPTY BUT WRD2 IS EMPTY -- > MIN_OPS = LEN(WRD1) 
+	I.E WE WILL REMOVE ALL CHARS FROM WRD1
+AND IF WRD1 IS EMPTY BUT WRD2 IS NOT EMPTY -- > MIN_OPS = LEN(WRD2
+	I.E WE WILL ADD ALL THE WORDS FROM WRD2 TO WRD1
+
+
+NOW LETS LOOK AT A GENERAL CAS
+WRD1 = ABD AND WRD2 = ACD
+I = 0 (PTR FOR WRD1) AND J = 0 (PTR FOR WRD2)
+IF WRD1[I] == WRD2[J] -- >(I+1, J+1) AND OPS = 0
+ELSE -> WE WILL TRY OUT ALL THE OPERATIONS
+   INSERT --> (I, J+1) I.E WE INSERTED A CHAR AT I-1 TO MATCH J, THUS WE INCREMENT J BUT NOT I
+   DELETE --> (I+1, J) I.E WE DELETED A CHAR AT I TO MATCH I+1 WITH J
+   REPLACE --> (I+1, J+1) I.E WE JUST MATCHED BOTH 
+   FOR ALL THERE OPS = 1
+WE NEED THE MIN_OPS
+
+
+WE WILL USE DP FOR THIS
+(BOTTOM UP)
+CREATE A DP TABLE/MATRIX OF SIZE LEN(W1) + 1 * LEN(W2) + 1
+NOW THE BASE CASE FOR DP[LEN(W1)][LEN(W2)] = 0 THIS IS THE CASE OF 2 EMPTY STRINGS (WRD1 AND WRD2)
+NOT THE ENTIRE LAST ROW IS THE CASE OF WRD1 = "" AND WRD2 IS NOT:
+    SO WILL FILL IT FROM 0 COL TO LEN(WRD2)-1 BY DECREMENTING LEN OF WRD2 BY 1 EACH TIME
+SIMILARY FOR ENTIRE LAST COL, ITS THE CASE OF WRD2 = "" AND WRD1 IS NOT
+    SO WILL FILL IT FROM 0 ROW TO LEN(WRD1)-1 BY DECREMENTING LEN OF WRD1 BY 1 EACH TIME
+
+WE WILL START BOTTOM UP FROM DP[LEN(WRD1)-1][LEN(WRD2)-1] TO DP[0][0]
+IF WRD1[I] == WRD2[J] --> DP[I][J] = DP[I+1][J+1]
+ELSE DP[I][J] = 1 + DP[I][J+1], DP[I+1][J], DP[I+1][J+1]) I.E MIN(INSERT, DELTE, REPLACE)
+
+FINALLY WE WILL RETURN DP[0][0]
+
+
+def minDistance(self, word1: str, word2: str) -> int:
+        dp = [ [float('inf')] * (len(word2)+1) for i in range(len(word1) + 1)]
+        
+        for j in range(len(word2)+1):
+            dp[len(word1)][j] = len(word2) - j
+        
+        for i in range(len(word1)+1):
+            dp[i][len(word2)] = len(word1) - i
+
+        for i in range(len(word1)-1, -1, -1):
+            for j in range(len(word2)-1, -1, -1):
+                if word1[i] == word2[j]:
+                    dp[i][j] = dp[i+1][j+1]
+                else:
+                    dp[i][j] = 1 + min(dp[i+1][j], dp[i][j+1], dp[i+1][j+1])
+        
+        return dp[0][0]
+
+----------------------------------------------------------------------------------------------------
+
+
