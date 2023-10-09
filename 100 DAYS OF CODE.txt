@@ -862,4 +862,65 @@ def minimumCardPickup(self, cards: List[int]) -> int:
 
 -------------------------------------------------------------------------------------------------------------------------------
 
-22. 
+22. COUNT GOOD TRIPLETS
+
+QUESTION EXPLANATION
+(IN SIMPLE TERMS)
+WE NEED TO FIND THE SUB-SEQUENCES COMMON IN BOTH ARRAYS
+
+APPROACH:
+SUPPOSE A1 = [2,0,1,3] AND A2 = [0,1,2,3]
+LETS SAY I POINTS TO 1 IN A1. NOW CORRESPONDING POSITION OF 1 IN A2 WILL BE J
+WE FIND THE ELEMENTS COMMON IN BOTH ARRAYS THAT ARE TO LEFT OF 1 IN BOTH AND 
+THAT OF RIGHT OF 1 IN BOTH. I.E IN A1 = [2,0] AND IN A2 = [0] (LEFT PART)
+A1 = [3] AND A2 = [2,3] (RIGHT PART)
+NOW, IF WE SEE THAT FOR LEFT PART WE HAVE ONLY 1 COMMON ELEMENT.
+SIMILARLY FOR THE RIGHT PART WE HAVE 1 COMMON ELEMENT.
+THUS 1 * 1, ONLY 1 SUCH TRIPLET EXISTS
+FOR THIS EXAMPLE, IF TAKE ANY OTHER NUMBER COMMON IN BOTH, ITS PRESENT AT ONE OF THE ENDS
+DUE TO WHICH WE CANNOT HAVE A LEFT OR RIGHT PART REQUIRED.
+
+IN GENERAL WE WILL START FROM IDX 1 TILL LEN(A)-2.
+FIND THE CORRESPONDING ELEMENT IN OTHER ARRAY. 
+CALCULATE THE COMMON ELEMENTS IN LEFT AND RIGHT PARTS. 
+GET TRIPLETS FOR EACH ITERATION AND ADD IT TO THE RESULT
+
+TC = O(N^2)
+
+
+(OPTIMAL)
+WE WILL USE A HASHMAP TO STORE INDICIES I.E INDEX OF ARR1[I] IN ARR2
+NOW WE NEED TO FIND TOTAL TRIPLETS(X, Y, Z) AS A SUBSEQENCE IN INDICIES WHERE X < Y < Z
+FOR THIS WE CAN LOCATE THE MIDDLE NUMBER Y AND THEN COUNT HOW MANY ON LEFT ARE LESS THAN Y
+AND HOW MANY ON THE RIGHT ARE GREATER THAN Y
+FINALLY WE CAN COUNT GOOD TRIPLETS FOR EACH ITERATION OF Y
+
+
+def goodTriplets(self, nums1: List[int], nums2: List[int]) -> int:
+        n = len(nums1)
+
+        # storing the idx of nums1[i] in nums2
+        my_map = {}
+        for i in range(n):
+            my_map[nums2[i]] = i
+        indices = []
+        for num in nums1:
+            indices.append(my_map[num])
+        
+        # calculating left and right count for each y
+        from sortedcontainers import SortedList
+        left, right = SortedList(), SortedList()
+        leftCount, rightCount = [], []
+        for i in range(n):
+            leftCount.append(left.bisect_left(indices[i]))
+            left.add(indices[i])
+        for i in range(n - 1, -1, -1):
+            rightCount.append(len(right) - right.bisect_right(indices[i]))
+            right.add(indices[i])
+
+        # counting triplets
+        cnt = 0
+        for i in range(n):
+            cnt += leftCount[i] * rightCount[n - 1 - i]
+        
+        return cnt
