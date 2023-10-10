@@ -1,0 +1,135 @@
+DAILY LEETCODE
+
+
+1. REORDER LIST
+
+
+def reorderList(self, head: Optional[ListNode]) -> None:
+        """
+        Do not return anything, modify head in-place instead.
+        """
+        # Splitting the linked list into 2 parts
+        # by finding its mid point 
+        slow, fast = head, head
+        while fast != None and fast.next != None:
+            slow = slow.next
+            fast = fast.next.next
+
+        newHead = slow.next
+        slow.next = None
+
+        # reverse the secind half of linked list
+        prev, curr, nxt = None, newHead, None
+        while curr != None:
+            nxt = curr.next
+            curr.next = prev
+            prev = curr
+            curr = nxt
+        
+        newHead = prev
+
+        # Merge the two parts
+        temp1, temp2 = head, newHead
+        t1, t2 = True, False
+        while temp1 != None and temp2 != None:
+            if t1:
+                nxt = temp1.next
+                temp1.next = temp2
+                temp1 = nxt
+                t2 = not t2
+                t1 = not t1
+            elif t2:
+                nxt = temp2.next
+                temp2.next = temp1
+                temp2 = nxt
+                t1 = not t1
+                t2 = not t2
+
+
+2. LEXICOGRAPHICALLY SMALLEST PALINDROME
+
+
+def makeSmallestPalindrome(self, s: str) -> str:
+        left, right = 0, len(s)-1
+        ans = ""
+
+        while left <= right:
+            if s[left] != s[right]:
+                ans += min(s[left], s[right])
+            else:
+                ans += s[left]
+            left += 1
+            right -= 1
+
+        if len(s) % 2 == 0: 
+            for i in range(len(ans)-1, -1, -1):
+                ans += ans[i]
+        else:
+            for i in range(len(ans)-2, -1, -1):
+                ans += ans[i]
+                
+        return ans
+
+3. LOWEST COMMON ANCESTOR IN BST
+
+
+def lowestCommonAncestor(self, root: 'TreeNode', p: 'TreeNode', q: 'TreeNode') -> 'TreeNode':
+        # Recursive
+        
+        # def rec(root, p, q):
+        #     if root.val == p.val or root.val == q.val:
+        #         return root
+
+        #     if ((p.val < root.val and q.val > root.val) or (p.val > root.val and q.val < root.val)):
+        #         return root
+            
+        #     if p.val < root.val and q.val < root.val:
+        #         return rec(root.left, p, q)
+        #     else:
+        #         return rec(root.right, p, q)
+        
+        # return rec(root, p, q)
+
+        # Iteration
+        curr = root
+        while curr:
+            if p.val > curr.val and q.val > curr.val:
+                curr = curr.right
+            elif p.val < curr.val and q.val < curr.val:
+                curr = curr.left
+            else:
+                return curr
+
+
+4. LOWEST COMMON ANCESTOR IN BT
+
+def lowestCommonAncestor(self, root: 'TreeNode', p: 'TreeNode', q: 'TreeNode') -> 'TreeNode':
+        # dfs traversal
+        queue = [root]
+        parent = {}
+        while queue:
+            node = queue.pop(0)
+            if node.left != None:
+                queue.append(node.left)
+                parent[node.left.val] = node.val
+            if node.right != None:
+                queue.append(node.right)
+                parent[node.right.val] = node.val
+        
+
+        curr = p.val
+        parent_p = [curr]
+        while curr in parent:
+            parent_p.append(parent[curr])
+            curr = parent[curr]
+        
+        curr = q.val
+        parent_q = [curr]
+        while curr in parent:
+            parent_q.append(parent[curr])
+            curr = parent[curr]
+        
+        print(parent_p, parent_q)
+        for el in parent_p:
+            if el in parent_q:
+                return TreeNode(el)
