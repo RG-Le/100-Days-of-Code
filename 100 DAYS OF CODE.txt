@@ -1026,4 +1026,117 @@ def findMaximizedCapital(self, k: int, w: int, profits: List[int], capital: List
 
 ----------------------------------------------------------------------------------------------------
 
+25. People and Secret
 
+
+APPROACH:
+USE DP
+CREATE A DP OF SIZE N+1
+DP[1] = 1 AS ONLY 1 PERSON KNOWS THE SECRET ON DAY1
+DP WILL STORE NUMBER OF PEOPLE TO GET TO KNOW THE SECRET ON ITH DAY
+
+NOW, A PERSON ON DAY I WILL SPREAD THE SECRET FROM I+DELAY DAY TILL BEFORE I+FORGET DAY
+THUS, NEW_PEOPLE_SHARING_SECRET ON ITH DAY = DP[I-DELAY]
+AND, NUMBER_OF_PEOPLE_FORGETTING THE SECRET ON ITH DAY = DP[I-FORGET]
+
+THUS, NUMBER OF PEOPLE GETTING TO KNOW THE SECRET = NUM_OF_PEOPLE_KNOWING_THE_SECRET + NEW_PEOPLE_SHARING_SECRET - NUM_OF_PEOPLE_FORGGETTING)
+
+NOW, OUR ANS WILL SUM OF DP FROM IDX N-FORGET TO END
+
+def peopleAwareOfSecret(self, n: int, delay: int, forget: int) -> int:
+        dp = [0] * (n+1)
+        MOD = 1e9 + 7
+        peopleSharingSecret = 0
+        ans = 0
+
+
+        dp[1] = 1
+
+        for i in range(2, n+1):
+            newPeopleSharingSecret = dp[max(0, i-delay)]
+            peopleForgettingSecret = dp[max(0, i-forget)]
+            
+            # + MOD TO AVOID UNDERFLOW CONDITION
+            peopleSharingSecret += (newPeopleSharingSecret - peopleForgettingSecret + MOD) % MOD
+
+            dp[i] = peopleSharingSecret
+
+        for i in range(n-forget+1, n+1):
+            ans = (ans + dp[i]) % MOD
+        
+        return int(ans)
+
+----------------------------------------------------------------------------------------------------
+
+26.  Invalid Transactions in an EMI
+
+
+class Transaction:
+    def __init__(self, name, time, amount, city):
+        self.name = name
+        self.time = int(time)
+        self.amount = int(amount)
+        self.city = city
+
+
+class Solution:
+    def invalidTransactions(self, transactions: List[str]) -> List[str]:
+        # The line of code below does the following:
+        # 1. we take every element from transactions list (for trans in transactions)
+        # 2. as every element is a string, we split it at ','
+        # 3. Our class needs to be initialized name, time, amount, city in the order and after splitting the order is maintained, thus we use the spread operator *
+        transactions = [Transaction(*transaction.split(',')) for transaction in transactions]
+        
+        # Sort the list according to time attribute of Transaction class
+        transactions.sort(key=lambda t: t.time)
+        
+        trans_indexes = defaultdict(list)
+        for i, t in enumerate(transactions):
+            trans_indexes[t.name].append(i)
+        res = []
+        for name, indexes in trans_indexes.items():
+            left = right = 0
+            for i, t_index in enumerate(indexes):
+                t = transactions[t_index]
+                if (t.amount > 1000):
+                    res.append("{},{},{},{}".format(t.name, t.time, t.amount, t.city))
+                    continue
+                while left <= len(indexes)-2 and transactions[indexes[left]].time < t.time - 60:
+                    left += 1
+                while right <= len(indexes)-2 and transactions[indexes[right+1]].time <= t.time + 60: 
+                    right += 1
+                for i in range(left,right+1):
+                    if transactions[indexes[i]].city != t.city:
+                        res.append("{},{},{},{}".format(t.name, t.time, t.amount, t.city))
+                        break
+        return res
+
+----------------------------------------------------------------------------------------------------
+
+27. All elements of a binary Search Tree
+
+APPROACH:
+(NAIVE BRUTE FORCE)
+CREATE AN EMPTY LST
+PERFORM DFS TRAVERSAL ON BOTH TREES WHILE APPENDING EACH ELEMENT TO THE LIST
+FINALLY SORT THE LIST
+
+def getAllElements(self, root1: TreeNode, root2: TreeNode) -> List[int]:
+        lst = []
+
+        def dfs(root):
+            if root is None:
+                return
+            
+            lst.append(root.val)
+            dfs(root.left)
+            dfs(root.right)
+        
+        dfs(root1)
+        dfs(root2)
+        lst.sort()
+        return lst
+
+---------------------------------------------------------------------------------------------------
+
+28. 
