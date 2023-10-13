@@ -1139,4 +1139,186 @@ def getAllElements(self, root1: TreeNode, root2: TreeNode) -> List[int]:
 
 ---------------------------------------------------------------------------------------------------
 
-28. 
+28. Rhombus Sums in a GRID
+
+APPROACH:
+FOR EACH POINT IN GRID WE WILL TAKE THAT POINT AND PUT IT IN OUR PRIORITY Q (SIZE OF SMALLEST RHOMBUS)
+THEN INITIALIZE GET FOUR POINTS --> L, R, U, D
+THIS IS PASSES TO A CALC() FUNCTION WHICH WILL CALCULATE THE AREA OF EVERY POSSIBLE RHOMBUS 
+FROM THAT POINT TILL IT CANNOT BE FORMED ANY MORE
+FINALLY WE WILL ADD IT IN THE PRIORITY QUEUE IT ITS NOT ALREADY PRESENT.
+IF LEN OF PQ > 3 AND THIS SUM > PQ[0] --> POP THE TOPMOST ELEMENT OF QUEUE AND ADD THIS NEW SUM
+
+FINALLY SORT THE LIST IN REVERSE ORDER AND RETURN
+
+def getBiggestThree(self, grid: List[List[int]]) -> List[int]:
+        def calc(l,r,u,d):
+            ssum = 0
+            c1 = c2 = (l+r)//2
+            expand = True
+
+            for row in range(u, d+1):
+                if c1 == c2:
+                    ssum += grid[row][c1]
+                else:
+                    ssum += grid[row][c1] + grid[row][c2]
+                
+                if c1 == l:
+                    expand = False
+                
+                if expand:
+                    c1 -= 1
+                    c2 += 1
+                else:
+                    c1 += 1
+                    c2 -= 1
+                    
+            return ssum
+
+        m = len(grid)
+        n = len(grid[0])
+        pq = []
+
+        for i in range(m):
+            for j in range(n):
+                l = r = j
+                d = i
+                while l >= 0 and r <= n-1 and d <= m-1:
+                    ssum = calc(l,r,i,d)
+                    l -= 1
+                    r += 1
+                    d += 2
+
+                    if len(pq) < 3:
+                        if ssum not in pq:
+                            heapq.heappush(pq, ssum)
+                    else:
+                        if ssum not in pq and ssum > pq[0]:
+                            heapq.heappop(pq)
+                            heapq.heappush(pq, ssum)
+
+
+        pq.sort(reverse = True)
+        return pq
+
+--------------------------------------------------------------------------------------------------
+
+29. Count Nice Pairs in an Array
+
+APPROACH:
+CHANGE THE INEQUALITY TO THE FOLLOWING
+NUMS[I] - REV(NUMS[I] == NUMS[J] - REV(NUMS[J])
+THUS FROM THIS WE CAN UPDATE OUR NUMS ARRAY SUCH THAT EACH ELEMENT ITS DIFF OF ITS REVERSE AND ITSELF
+NEXT WE CAN COUNT FREQ OF EACH ELEMENT IN THIS UPDATED NUMS
+FINALLY FOR EACH UNIQUE ELEMENT WE CAN SUM 1 + .. + FREQ-1
+
+def countNicePairs(self, nums: List[int]) -> int:
+        for i in range(len(nums)):
+            nums[i] = nums[i] - int(str(nums[i])[::-1])
+        
+        freq = defaultdict(int)
+        for el in nums:
+            freq[el] += 1
+
+        pairs = 0
+        for key, val in freq.items():
+            pairs += ((val * (val-1))//2)
+        
+        return int(pairs % self.MOD)
+
+
+----------------------------------------------------------------------------------------------------
+
+30. Good People based on Statements
+
+APPROACH:
+USING BITMASKING (USED GENERALLY WHEN CONSTRAINT IS SMALL)
+
+WE HAVE N PEOPLE, AND 2 POSSIBLE CASES FOR EVERY PERSON I.E 0 OR 1 (BAD OR GOOD)
+THUS WE CAN GENERATE ALL POSSIBLE SUBSETS OF N PEOPLE (2^N) (OUR POSSIBLE TRUTH CASES)
+
+THEN FOR EACH STATEMENT MADE IN OUT STATEMENTS ARRAY, WE CHECK WITH ALL OUR SUBSETS AND 
+CHECK WHICH OF THEM ARE NOT CONTRADICTING. AND FOR EACH NON CONTRADICTING STATEMENT WE 
+CALCULATE NUMBER OF GOOD PEOPLE AND TAKE MAX OF THAT EVERY TIME.
+
+CONTRADICTION OCCURS WHEN 
+A BAD PERSON(0) SAYS A GOOD PERSON (TRUTH CASE) IS BAD
+A BAD PERSON(0) SAYS A BAD PERSON (TRUTH CASE) IS GOOD
+THE ABOVE STATEMENTS CAN BE MADE USING BIT MANIPULATION
+I.E (MASK >> PERSON) & 1 --- > 2 ==> TRUE AND 0 ==> FALSE
+OR (1 << PERSON) & MASK
+
+
+
+def maximumGood(self, statements: List[List[int]]) -> int:
+        n = len(statements)
+        res = 0
+
+        def checkGood(person, mask):
+            if (mask >> person) & 1:
+                return True
+            return False
+
+
+        def validateStatement(mask):
+            for i in range(n):
+                if checkGood(i, mask):
+                    for j in range(n):
+                        statement = statements[i][j]
+
+                        if ((statement == 0 and checkGood(j, mask))
+                            or (statement == 1 and not checkGood(j, mask))):
+                            return False
+            return True 
+
+
+        # Bitmasking 
+        for i in range(1, 1<<n): # 1 << n === 2^n
+            if validateStatement(i):
+                res = max(res, bin(i).count('1'))
+
+        return res
+----------------------------------------------------------------------------------------------------
+
+31. Fraction to a recurring Decimal
+
+def fractionToDecimal(self, numerator: int, denominator: int) -> str:
+        # Check division by 0
+        if denominator == 0:
+            return ""
+        
+        # Check for numerator == 0
+        if numerator == 0:
+            return "0"
+
+        # Initialize the result and add the quotient and check for negitivity
+        res = ""
+        if (numerator < 0) ^ (denominator < 0):
+            res += "-"
+        numerator, denominator = abs(numerator), abs(denominator)
+        quotient = numerator // denominator
+        res += str(quotient)
+
+        # Calculate and return if remainder is 0
+        # Else add decimal point
+        remainder = numerator % denominator
+        if remainder == 0:
+            return res 
+        res += "."
+
+        # Initialize a dictionary to check recurrence of remainder
+        # Create a while loop until remainder == 0 or its present in the dict
+        # Also keep adding the quotient until repetation
+        pos = {}
+        while remainder != 0 and remainder not in pos:
+            pos[remainder] = len(res)
+            remainder *= 10
+            res += str(remainder // denominator)
+            remainder %= denominator
+        
+        # check for recurrence in dict and get recurrence index and brackets
+        if remainder in pos:
+            res = res[:pos[remainder]] + "(" + res[pos[remainder]:] + ")"
+        
+        # Finally return the result
+        return res
