@@ -1322,3 +1322,172 @@ def fractionToDecimal(self, numerator: int, denominator: int) -> str:
         
         # Finally return the result
         return res
+----------------------------------------------------------------------------------------------------
+
+32. INCREASING TRIPLET SUBSEQUNCE
+
+APPROACH:
+(BRUTE FORCE)
+TAKE TWO POINTER, FIX THEM SUCH THAT FOR I < J, ARR[I] < ARR[J]
+THEN TAKE ANOTHER POINTER AND ITERATE TILL YOU FIND EL > ARR[J]
+IF FOUND RETURN TRUE
+ELSE INCREMENT I AND J
+IF J REACHES END RETURN FALSE
+
+TC = O(N^2)
+
+
+(OPTIMIZED)
+WE NEED TO FIND THE FIRST OCCURENCE OF A SUBSEQUENCE IN INCREASING ORDER
+THUS LETS HAVE 2 VARIABLES LOW1 AND LOW2 INITIALIZED TO INF
+LOW1 IS THE SMALLEST, LOW2 IS GREATER THAN LOW1
+
+NOT WITH EACH ITERATION WE NEED TO UPDATE THESE SUCH THAT LOW1 < LOW2
+FOR EACH EL IN NUMS:
+	IF EL < LOW1: --> LOW1 = EL
+	ELIF EL < LOW2: --> LOW2 = EL
+	ELSE: --> RETURN TRUE
+RETURN FALSE
+
+ABOVE IF EL < LOW1 --> WE UPDATE LOW1 AND MOVE WITH NEXT ITERATION
+ELSE IF EL < LOW2 -- > EL IS GREATER THAN LOW1, THEN WE UPDATE LOW2 AND MOVE WITH NEXT ITERATION
+ELSE: --> EL IS SMALLER THAN LOW2 --> WE FOUND OUR TRIPLET
+
+IF THIS FINAL ELSE IS NEVER EXECUTED --> NO SUCH TRIPLETS AVAILABLE
+
+
+def increasingTriplet(self, nums: List[int]) -> bool:
+        low1 = low2 = float('inf')
+
+        for el in nums:
+            if el <= low1:
+                low1 = el
+            elif el <= low2:
+                low2 = el
+            else:
+                return True
+        
+        return False
+
+----------------------------------------------------------------------------------------------------
+
+33. Kth smallest in Lexographical Order
+
+APPROACH:
+FOR FIRST, WE INITIALIZE CURR = 1 AND DECREMENT K BY 1
+THEM WHILE K > 0:
+WE CHECK NUMBER OF STEPS TO REDUCE CURR TO CURR + 1 (1 TO 2)
+IF THESE STEPS <= K --> INCEMENT CURR BY 1, DECREMENT K BY STEPS
+ELSE --> CURR = CURR * 10; DECREMENT K BY 1 (1 TO 10)
+
+FUNCTION TO CALCULATE STEPS TO REDUCE N1 TO N2 WHILE IN RANGE 1 TO N
+INITIALIZE STEPS = 0
+WHILE N1 <= N
+	STEPS += MIN(N+1, N2) - N1
+	GETTING NEXT SET OF NUMBER I.E
+	N1 *= 10 AND N2 *= 10
+RETURN STEPS
+
+
+def findKthNumber(self, n: int, k: int) -> int:
+        curr = 1
+        k -= 1
+        while k > 0:
+            steps = self.getSteps(n, curr, curr+1)
+            if steps <= k:
+                curr += 1
+                k -= steps
+            else:
+                curr *= 10
+                k -= 1
+
+        return curr 
+
+    def getSteps(self, n, n1, n2):
+        steps = 0
+        while n1 <= n:
+            steps += min(n+1, n2) - n1
+            n1 *= 10
+            n2 *= 10
+        return steps
+----------------------------------------------------------------------------------------------------
+
+34. MAGICAL STRING
+
+APPRAOCH:
+IF N == 0 THEN RETURN 0
+INITIALIZE S WITH 1,2,2 AND VAR I = 2
+WHILE LEN(S) < N:
+  APPEND TO S --> [3-S[-1]] * S[I]
+  INCREMENT I
+
+FINALLY RETURN NUMBER OF ONES IN FIRST N ELEMENTS OF S
+
+def magicalString(self, n: int) -> int:
+        if n == 0:
+            return 0
+        s = [1,2,2]
+        i = 2
+        while len(s) < n:
+            s += [3 - s[-1]] * s[i]
+            i += 1
+        return s[:n].count(1)
+----------------------------------------------------------------------------------------------------
+
+
+35. Non Negative Integers without consecutive ones 
+
+APPRAOCH:
+IF WE FOR ONLY 1 BIT POSSIBLE COMBS WITHOUT CONCECUTICE ONES IS 2
+FOR 2 BITS (00, 01, 10, 11), POSSIBLE COMBS WITHOUT CONSECUTIVE ONES IS 3
+FOR 3 BITS IT WILL BE 5 (8 - COUNT(011,111,110))
+FOR 4 BITS IT WILL BE 8
+
+WE SEE THAT IT FOLLOWS FIBONACCI SERIEST
+ALSO THE MAX VALUE OF N IS 10^9 WHICH CAN BE REPRESENTED BY 30-31 BITS
+THUS WE WILL CALCULATE FIRST 29-30 FIBONACCI NUMBRES
+
+NOW LET  N = 5
+IN BINARY N = 5 IS 1 0 1. LETS TAKE 1 AS PREFIX (FROM LEFT)
+--> POSSIBLE 2 BITS WITHOUT CONSEC ONES IS FIB(2) = 3
+SINCE 2ND BIT IS 0 WE MOVE TO LAST BIT 1. WE HAVE THE COMPLETE BIN REPRESENTATION. THUS WE WILL ADD
+FIB(0)
+AND WE HAVE REACHED THE END OF OUR BIN REPRESENTATION
+THUS OUR ANS IN THIS CASE WILL BE FIB(2) + FIB(1) + 1 = 3 + 1 + 1 = 5
+
+FOR N = 180, THE BINARY REP IS 10110100.
+LETS TAKE 1 AS PREFIX (FROM LEFT), POSSIBLE NUMBER OF COMBS WITHOUT CONSEC ONES IS 
+LEN(REP) - PREFIX_POS = FIB(7) (RANGE OF 0000000 - 1111111)
+LETS TAKE NEXT 1 (PREFIX IS 101), POSSIBLE NUMBER OF COMBS = FIB(5)
+LETS TAKE THE NEXT 1, BUT WE SEE THAT PREVIOUS WAS ALSO 1 (THESE ARE CONSECUTIVE ONES POSITION)
+THUS WE BREAK AND RETURN OUR ANS I.E. FIB(7) + FIB(5)
+
+
+
+def findIntegers(self, n: int) -> int:
+        fib = [0] * 31
+        fib[0], fib[1] = 1, 2
+
+        for i in range(2,30):
+            fib[i] = fib[i-1] + fib[i-2]
+
+        ans = 0
+        cnt = 30
+        prevBitOne = 0
+
+        while cnt >= 0:
+            if (n & (1<<cnt)):
+                ans += fib[cnt]
+                if prevBitOne:
+                    return ans
+                prevBitOne = 1
+            else:
+                prevBitOne = 0
+            
+            cnt -= 1
+        
+        return ans + 1
+
+----------------------------------------------------------------------------------------------------
+
+36.
