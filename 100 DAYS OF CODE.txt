@@ -1490,4 +1490,340 @@ def findIntegers(self, n: int) -> int:
 
 ----------------------------------------------------------------------------------------------------
 
-36.
+36. Knight in a Chessboard
+
+
+APPROACH:
+CREATE 2 BOARDS CURR_BOARD, NEXT_BOARD WITH VALUE 0.0
+
+NOTE ==> FROM GIVEN POS, PROB OF REACHING THE NEXT POS IS CURR_PROB / 8.0
+
+WE TRY TO GET THE PROB OF REACHING ALL THE POSSIBLE POSITIONS AND STORE THEM ON THE BOARD
+FINALLY, OUR ANS IS SUM OF ALL PROBS ON THE BOARD
+
+ALL POSSIBLE MOVES CAN BE SAVED IN A LIST AS THOSE ARE -2,-1 , -2,1 .....
+FOR WHICH WE CAN CALCULATE BOUNDS AND IF THEY ARE IN BOUONDS WE CAN TRAVEL TO NEXT POS AND UPDATE ITS PROBS
+
+CURR_BOARD = NEW_BORAD = [[0.0]*N]*N
+(CURR_BOARD SHOWS THE CURRENT PROB OF GIVEN/POSSILE POSITIONS)
+(NEXT_BOARD IS USED TO FIND THE POSSIBLE POSITIONS AND UPDATE THE PROBS)
+
+FOR I FROM 0 TO K:
+-->CURR_BOARD = NEXT_BOARD
+-->NEXT_BOARD = [[0.0]*N]*N 
+
+--> TRAVERSE ALL POSITIONS IN BOARD (R,C):
+---------> IF CURR_BOARD[R][C] == 0: --> CONTINUE
+---------> ELSE: 
+--------------->USING POSSIBLE MOVES LIST, CALCULATE NEW_ROW AND NEW_COL VALUES AND 
+		CHECK IF THEY ARE INBOUDS
+		IF TRUE-->UPDATE THE PROB ON NEXT_BOARD I.E
+		NEXT_BOARD[NEW_ROW][NEW_COL] = CURR_BOARD[R][C] / 8.0
+
+FINALLY TRAVEL TEH NEXT_BOARD AND ADD ALL PROBS
+RETURN THE TOTAL_PROBS
+
+def knightProbability(self, n: int, k: int, row: int, column: int) -> float:
+        possible_moves = [(-2,-1), (-2, 1), (-1, -2), (-1, 2), (1, -2), (1, 2), (2, -1), (2, 1)]
+
+        currBoard = [[0.0] * n for _ in range(n)]
+        nextBoard = [[0.0] * n for _ in range(n)]
+        nextBoard[row][column] = 1.0
+
+        for _ in range(k):
+            currBoard, nextBoard = nextBoard, [[0.0] * n for _ in range(n)]
+
+            for r in range(n):
+                for c in range(n):
+                    if currBoard[r][c] == 0.0:
+                        continue
+                    
+                    for dr, dc in possible_moves:
+                        nrow, ncol = r + dr, c + dc
+                        bounds = ((0 <= nrow < n) and (0 <= ncol < n))
+
+                        if bounds:
+                            nextBoard[nrow][ncol] += currBoard[r][c] / 8.0
+
+        total = 0.0
+        for r in range(n):
+            for c in range(n):
+                total += nextBoard[r][c]
+
+        return total 
+
+----------------------------------------------------------------------------------------------------
+
+
+37. Matching Subsequences
+
+
+APPROACH:
+(BRUTE FORCE)
+FOR EVERY WORD IN DICTIONARY:
+    IF LEN(WORD) > LEN(S) --> CONTINUE
+    ELSE: ===> ITERATE OVER WORD AND S AT SAME TIME AND CHECK ALL CHARACTERS OF WORD 
+               ARE IN S IN ORDER (SUBSEQUECE)
+                IF YES --> INCREMENT THE COUNT
+FINALLY RETURN THE COUNT
+
+
+
+(OPTIMIZED)
+CREATE A FUNCTION CALLED IS_SUBSEQUENCE
+WORD GIVEN:
+
+FOR EVERY CHAR OF WORD
+  FIND ITS INDEX:
+  AND FOR NEXT CHAR SEARCH IN S[I+1:]
+  IF AT ANY POINT FIND GIVES -1 AS INDEX,-->RETURN FALSE I.E NOT A SUBSEQUENCE
+
+
+
+def numMatchingSubseq(self, s: str, words: List[str]) -> int:
+def isSub(word):
+            idx = -1
+            for ch in word:
+                idx = s.find(ch, idx+1)
+                if idx == -1:
+                    return False
+            return True
+        
+        cnt = 0
+        for wrd in words:
+            if isSub(wrd):
+                cnt += 1
+        
+        return cnt
+
+----------------------------------------------------------------------------------------------------
+
+38. Genetic Mutation
+
+
+APPROACH:
+USING DFS OR BFS WILL SOLVE THE PROBLEM
+
+FOR BFS:
+CONVERT LIST OF BANK TO A SET WITH STARTGENE
+CREATE A STRING OR LIST OF POSSIBLE MUTATION OPTIONS = [A, C, T, G]
+CREATE A QUEUE FOR BFS TRAVERSAL AND A VISITED SET
+INITIALIZE A COUNT
+
+WHILE QUEUE IS NOT EMPTY:
+--> ITERATE OVER LEN OF QUEUE
+-----> POP ELEMENT FROM QUEUE ---> CURR_GENE
+-----> IF THIS CURR_GENE == END_GENE --> RETURN COUNT
+-----> FOR J FROM 0 TO 8:
+-------->FOR EACH CHAR IN POSSIBLE_MUTATIONS:
+-----------> CREATE A NEW_GENE = CURR_GENE[:J] + CHAR + CURR_GENE[J+1:]
+-----------> IF THIS GENE IS IN THE BANK AND NOT IN THE VISITED SET
+----------------> THEN ADD IT IN THE VISITED SET AND APPEND IT TO THE QUEUE
+-----> INCREMENT THE COUNT
+IF WE EXIT --> RETURN -1
+
+
+def minMutation(self, startGene: str, endGene: str, bank: List[str]) -> int:
+        # Converting bank from list to set for faster access
+        bank = set(bank)
+        # Possible Mutations:
+        st = "ACGT"
+
+        # BFS
+        queue = [startGene]
+        visited = set()
+        visited.add(startGene)
+        cnt = 0
+
+        while queue:
+            for i in range(len(queue)):
+                gene = queue.pop(0)
+                if gene == endGene:
+                    return cnt
+                for j in range(8):
+                    for c in st:
+                        newGene = gene[:j] + c + gene[j+1:]
+                        if newGene in bank and newGene not in visited:
+                            visited.add(newGene)
+                            queue.append(newGene)
+            cnt += 1
+        
+        return -1
+
+
+
+FOR DFS 
+SIMILAR TO BFS CONVERT BANK FROM LIST TO SET WITH START_GENE
+CREATE A DFS FUNCTION WITH ARGS AS CURR_GENE, COUNT
+--> BASE CASE: IF CURR_GENE == END_GENE ---> RETURN COUNT
+--> REMOVE THIS FROM OUR BANK SET
+--> ITERATE OVER EACH CHAR OF CURR_GENE WITH ITS IDX USING ENUMERATE ( CH, IDX):
+------> FOR EACH CHAR C IN "ACGT" (POSSIBLE MUTATIONS) (C)
+---------> CHECK C != CH AND NEW_GENE := CURR_GENE[:IDX]+C+CURR_GENE[IDX+1:] IS IN BANK 
+			AND RES:= DFS(NEW_GENE, COUNT+1) != -1
+-------------> IF TRUE THEN RETURN THE RES
+--> ELSE EXIT LOOPS AND RETURN -1
+
+FINALLY CALL DFS(START_GENE, 0)
+
+
+
+def minMutation(self, startGene: str, endGene: str, bank: List[str]) -> int:
+	# DFS
+        bank = set(bank)
+        bank.add(startGene)
+
+        def dfs(st, cnt):
+            if st == endGene:
+                return cnt
+            
+            bank.remove(st)
+            for i, ch in enumerate(st):
+                for c in "ACGT":
+                    if (
+                        c != ch 
+                        and (st1 := st[:i] + c + st[i + 1:]) in bank 
+                        and (res := dfs(st1, cnt+1)) != -1
+                    ):
+                        return res
+            
+            return -1
+
+        return dfs(startGene, 0)
+----------------------------------------------------------------------------------------------------
+
+39. Count Nodes Equal to Average of Subtree
+
+APPRAOCH:
+USING POST ORDER TRAVERSAL
+BASICALLY, AVG OF NODE IS SUM OF ITS SUBTREE DIVIDED BY NUMBER OF NODES IN SUBTREE
+WE CAN USE POST ORDER TRAVERSAL I.E  LEFT->RIGHT->ROOT
+THIS WILL GIVE SUM OF LEFT SUBTREE, NUMBER OF NODES IN LEFT SUBTREE AND SIMILAR FOR RIGHT SUBTREE
+FINALLY WE CAN SUM UP BOTH VALUES AND DIVIDE THEM BY SUM OF NODES IN BOTH AND CHECK AND INCREMENT 
+THE COUNT
+
+DFS()
+IF ROOT EXISIS:
+-->DFS(ROOT.LEFT)
+-->DFS(ROOT.RIGHT)
+--> INITIALIZA ROOT.TOTAL, ROOT.NODES (SUM OF SUBTREE AND NUMBER OF NODES IN SUBTREE)
+--> IF ROOT.LEFT EXISTS --> INCREMENT ROOT.NODES AND UPDATE ROOT.TOTAL
+--> SIMILAR FOR ROOT.RIGHT
+--> FINALLY CHECK IF ROOT.VAL == INT(ROOT.TOTAL / ROOT.NODES) (AVG OF SUBTREE)
+-----> IF TRUE THEN INCREMENT COUNT
+
+RETURN THE COUNT AFTER CALLING THE DFS FUCNTION
+
+
+def averageOfSubtree(self, root: Optional[TreeNode]) -> int:
+        
+        self.cnt = 0
+        
+        def dfs(root):
+            if root:
+                dfs(root.left)
+                dfs(root.right)
+
+                root.total, root.nodes = root.val, 1
+
+                if root.left:
+                    root.total += root.left.total
+                    root.nodes += root.left.nodes
+
+                if root.right:
+                    root.total += root.right.total
+                    root.nodes += root.right.nodes
+
+                if root.val == int(root.total / root.nodes):
+                    self.cnt += 1
+        
+        dfs(root)
+        return self.cnt
+
+----------------------------------------------------------------------------------------------------
+
+40. Maximum Matrix Sum
+
+APPROACH:
+GIVEN A MATRIX WITH NEG NUMS, AND WE CAN MULTIPLY ANY 2 ADJACENTS WITH -1 ANY NUM OF TIMES
+
+SO IF WE HAVE EVEN NEG NUMS, THEN WE CAN CONVERT ALL OF THEM TO POSITIVE
+BECAUSE EVEN IF THEY ARE NOT ADJACENT, BY CONTINOUS OPERATION OF -1 ON ANY ADJACENT ELEMENTS, 
+WE CAN MAKE THEM POSITIVE
+
+AND IF IN CASE NUM OF NEG NUMS IS ODD, THEN WE CAN TOTAL THE ABS VALUE OF EACH ELEMENTS
+THEN, WE CAN SUBTRACT 2*ABS(MIN(EL)) (MIN ABS EL FROM WHOLE MATRIX)
+BECAUSE CONTINOUS -1 OPERATION WILL LEAVE US WITH ONE SINGLE ELEMENT AS NEG
+SO IF WE APPLY THAT OPERATION IN SUCH A WAY THAT THE ONE REMAINING NEG ELEMENT IS THE SMALLEST
+IN THE MATRIX, WE WILL GET OUR MAXIMUM SUM
+
+def maxMatrixSum(self, matrix: List[List[int]]) -> int:
+        neg_cnt = 0
+        total = 0
+        minEl = float('inf')
+        for row in matrix:
+            for el in row:
+                total += abs(el)
+                if el < 0:
+                   neg_cnt += 1
+                minEl = min(minEl, abs(el))
+
+        # print(neg_cnt, total, minEl)
+        if neg_cnt % 2 == 0:
+            return total
+        else:
+            return total - 2 * abs(minEl)
+
+----------------------------------------------------------------------------------------------------
+
+
+41. Stock Price Fluctuation 
+
+APPRAOCH:
+USE 2 HEAPS (MAX AND MIN) AND A HASHMAP
+
+INITIALIZE LATEST, MAP, MIN AND MAX HEAPS
+
+FOR UPDATE FUNCTION:--> UPDATE THE TIMESTAMP AND PEICE IN MAP
+SET LATEST TO CURR_TIMESTEP IF ITS LESS THAN OUR LATEST
+PUSH PRICE TO MIN_HEAP AND -PRICE TO MAX HEAP ALONG WITH TIMESTAMP IN BOTH
+
+FOR CURRENT FUNCTION---> RETURN MAP[LATEST]
+
+FOR MAXIMUM FUNCTION--> POP ELEMENTS FROM HEAP UNTIL WE GET THE PRICE OF 
+TIME STAMP OF TOP OF MAX HEAP
+I.E MAP[MAX_HEAP[0][1]] != -MAX_HEAP[0][0] --> POP
+FINALLY RETURN -MAX_HEAP[0][0]
+
+FOR MINIMUM FUNCTION:--> SAME AS MAXIMUM BUT JUST USE MIN_HEAP
+
+class StockPrice:
+
+    def __init__(self):
+        self.map = {}
+        self.maxHp = [] # max-heap
+        self.minHp = [] # min-heap
+        self.latest = 0
+
+    def update(self, timestamp: int, price: int) -> None:
+        self.map[timestamp] = price 
+        if self.latest <= timestamp: 
+            self.latest = timestamp
+        heappush(self.maxHp, (-price, timestamp))
+        heappush(self.minHp, (price, timestamp))
+
+    def current(self) -> int:
+        return self.map[self.latest]
+
+    def maximum(self) -> int:
+        while self.map[self.maxHp[0][1]] != -self.maxHp[0][0]: 
+            heappop(self.maxHp)
+        return -self.maxHp[0][0]
+
+    def minimum(self) -> int:
+        while self.map[self.minHp[0][1]] != self.minHp[0][0]: 
+            heappop(self.minHp)
+        return self.minHp[0][0]
+----------------------------------------------------------------------------------------------------
+
+42.
