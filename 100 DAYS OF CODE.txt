@@ -1826,4 +1826,291 @@ class StockPrice:
         return self.minHp[0][0]
 ----------------------------------------------------------------------------------------------------
 
-42.
+42. Shortest Unsorted Continuous Subarray
+
+APPROACH:
+WE NEED TO FIND THE 2 POINTS I.E LEFT AND RIGHT WHERE WHICH ARE MIN AND MAX 
+WHERE OUR ARRAY IS UNSORTED I.E ARR[I] > ARR[I+1]
+ANS IS RIGHT - LEFT + 1 OR 0 IF LEFT > RIGHT
+
+SORTED APPROACH:
+HERE WE WILL CREATE A SORTED COPY OF OUR GIVEN ARRAY
+INITIALIZE L, R WITH LEN(ARR)-1, 0 RESPECTIVELY
+FOR I FROM 0 TO LEN(ARR):
+---IF THERE IS A MISMATCH BETWEEN SORTED_ARRAY AND GIVEN ARRAY:
+-------GET LEFT = MIN(I, LEFT)
+-------GET RIGHT = MAX(I, RIGHT)
+FINALLY CHECK IF LEFT > RIGHT ? 0 : RIGHT-LEFT+1
+
+
+STACK APPROACH
+INITIALIZE LEFT, RIGHT WITH LEN(ARR)-1, 0
+FOR FINDING LEFT, CREATE AN EMPTY STACK
+FOR I FROM 0 TO LEN(ARR):
+--WHILE STACK IS NOT EMPTY AND ARR[STACK.TOP] > ARR[I]:
+---- LEFT = MIN(LEFT, STACK.POP)
+--STACK.PUSH(I)
+FOR FINDING RIGHT, CREATE AN EMPTY STACK
+FOR I FROM LEN(ARR)-1 TO 0
+--WHILE STACK IS NOT EMPTY AND ARR[STACK.TOP] < ARR[I]
+----RIGHT = MAX(RIGHT, STACK.POP)
+--STACK.PUSH(I)
+FINALLY RETURN 0 IF LEFT > RIGHT ELSE RIGHT - LEFT + 1
+
+
+
+def findUnsortedSubarray(self, nums: List[int]) -> int:
+        # Sorting Approach
+
+        sorted_arr = sorted(nums)
+
+        l, r = len(nums) - 1, 0
+        for i in range(len(nums)):
+            if nums[i] != sorted_arr[i]:
+                l = min(l, i)
+                r = max(r, i)
+        
+        return 0 if l >= r else r-l+1
+
+
+        # Stack Approach
+        # l, r = len(nums)-1, 0
+        # stack = []
+
+        # for i in range(len(nums)):
+        #     while stack and nums[stack[-1]] > nums[i]:
+        #         l = min(l, stack.pop())
+        #     stack.append(i)
+        
+        # stack = []
+        # for i in range(len(nums)-1, -1, -1):
+        #     while stack and nums[stack[-1]] < nums[i]:
+        #         r = max(r, stack.pop())
+        #     stack.append(i)
+        
+        # return 0 if l >= r else r - l + 1
+----------------------------------------------------------------------------------------------------
+
+43. Dungeon Game
+
+APPRAOCH:
+
+MEMOIZATION:
+WE NEED TO FIND MIN HP FROM 0,0. FOR THIS WE WILL NEED MIN HP FROM 1,0 AND 0,1 TO GET TO M-1,N-1
+THUS WE CAN SEE SOME RECURSION OVER HERE
+MIN_HP[I][J] DEPENDS ON MIN(I+1,J AND I,J+1)
+
+FOR OUR BASE CASE, IF WE GET TO BOTTOM RIGHT I.E M-1,N-1 AND HP THERE IS >0. 
+WE CAN STORE AND RETURN 1 I.E MEMO[I][J] = 1
+FOR OUT_OF_BOUNDS CASE: RETURN FLOAT('INF')
+IF ALREADY IN MEMO: RETURN MEMO[I][J]
+
+NOW FOR OUR RECURSIVE CALL:
+MIN_HP[I][J] = GRID[I][J] - MIN(REC(GRID, I+1, J), REC(GRID, I, J+1))
+I.E MIN OF BOTTOM AND RIGHT CELLS SUBTRACTED FROM CURRENT GRID HP
+
+THIS WAY WE WILL BUILD UP MIN_HP FOR ALL THE NODES TILL 0,0
+
+def calculateMinimumHP(self, dungeon: List[List[int]]) -> int:
+        m = len(dungeon)
+        n = len(dungeon[0])
+
+        # Memoization
+        # memo = [[-1] * n for _ in range(m)]
+
+        # def rec(grid, i, j):
+        #     # Base Case
+        #     if i == m-1 and j == n-1:
+        #         if grid[i][j] >= 0:
+        #             return 1
+        #         else:
+        #             return -grid[i][j] + 1
+            
+        #     # OutofBounds Case
+        #     if i >= m or j >= n:
+        #         return float('inf')
+            
+        #     # Memoization
+        #     if memo[i][j] != -1:
+        #         return memo[i][j]
+            
+        #     res = grid[i][j] - min(rec(grid, i+1, j), rec(grid, i, j+1))
+        #     memo[i][j] = 1 if res >= 0 else -res
+        #     return memo[i][j]
+        
+        # return rec(dungeon, 0, 0)
+
+
+# TABULATION/BOTTOMUP APPROACH
+
+HERE WE WILL START FROM BOTTOM AND BUILD-UP OUR SOLUTION TO THE TOP
+CREATE A DP OF -1 WITH SIZE M+1 X N+1
+DP[M-1][N] = DP[M][N-1] = 1 (THESE OUR DOWN AND RIGHT CELLS FOR BOTTOM RIGHT POSITION M-1,N-1)
+WE WILL START FROM M-1, N-1 TILL 0, 0
+
+AT EACH CELL, THE MIN_HP THERE IS MIN OF CELL BELOW AND CELL RIGHT SUBTRACTED FROM 
+GIVEN VALUE AT THAT LEVEL. IF THIS IS LESS THAN OR EQUAL TO 0, WE SET IT TO 1 (MIN_HP TO BE ALIVE)
+
+ANS WILL BE AT DP[0][0]
+
+ALGO
+FOR I FROM M-1 TO 0:
+-->FOR J FROM N-1 TO 0:
+----->DP[I][J] = MAX(MIN(DP[I+1][J], DP[I][J+1]) - DUNGEON[I][J], 1)
+RETURN DP[0][0]
+
+def calculateMinimumHP(self, dungeon: List[List[int]]) -> int:
+        m = len(dungeon)
+        n = len(dungeon[0])
+
+        # Tabular BottomUp
+        dp = [[float('inf')] * (n+1) for _ in range(m+1)]
+        dp[m-1][n] = dp[m][n-1] = 1
+
+        for i in range(m-1, -1, -1):
+            for j in range(n-1, -1, -1):
+                dp[i][j] = max(min(dp[i+1][j], dp[i][j+1]) - dungeon[i][j], 1)
+        
+        return dp[0][0]  
+
+----------------------------------------------------------------------------------------------------
+
+44. People aware of secret
+
+APPROACH:
+USE DP
+CREATE A DP OF SIZE N+1
+DP[1] = 1 AS ONLY 1 PERSON KNOWS THE SECRET ON DAY1
+DP WILL STORE NUMBER OF PEOPLE TO GET TO KNOW THE SECRET ON ITH DAY
+
+NOW, A PERSON ON DAY I WILL SPREAD THE SECRET FROM I+DELAY DAY TILL BEFORE I+FORGET DAY
+THUS, NEW_PEOPLE_SHARING_SECRET ON ITH DAY = DP[I-DELAY]
+AND, NUMBER_OF_PEOPLE_FORGETTING THE SECRET ON ITH DAY = DP[I-FORGET]
+
+THUS, NUMBER OF PEOPLE GETTING TO KNOW THE SECRET = NUM_OF_PEOPLE_KNOWING_THE_SECRET + NEW_PEOPLE_SHARING_SECRET - NUM_OF_PEOPLE_FORGGETTING)
+
+NOW, OUR ANS WILL SUM OF DP FROM IDX N-FORGET TO END
+
+def peopleAwareOfSecret(self, n: int, delay: int, forget: int) -> int:
+        dp = [0] * (n+1)
+        MOD = 1e9 + 7
+        peopleSharingSecret = 0
+        ans = 0
+
+
+        dp[1] = 1
+
+        for i in range(2, n+1):
+            newPeopleSharingSecret = dp[max(0, i-delay)]
+            peopleForgettingSecret = dp[max(0, i-forget)]
+            
+            # + MOD TO AVOID UNDERFLOW CONDITION
+            peopleSharingSecret += (newPeopleSharingSecret - peopleForgettingSecret + MOD) % MOD
+
+            dp[i] = peopleSharingSecret
+
+        for i in range(n-forget+1, n+1):
+            ans = (ans + dp[i]) % MOD
+        
+        return int(ans)
+----------------------------------------------------------------------------------------------------
+
+45. Query Kth Smallest Trimmed Number
+
+APPROACH:
+BRUTE FORCE
+
+def smallestTrimmedNumbers(self, nums: List[str], queries: List[List[int]]) -> List[int]:
+        # Brute Force
+        ans = []
+        temp = [-1] * len(nums)
+        for query in queries:
+            k, trim = query[0], query[1]
+            for i in range(len(nums)):
+                temp[i] = (int(nums[i][-trim:]), i)
+            temp.sort()
+            ans.append(temp[k-1][1])
+        
+        return ans
+
+----------------------------------------------------------------------------------------------------
+
+46. Partition to K equal Sum Subsets
+
+APPROACH:
+BACKTRACKING
+
+WE NEED TO DIVIDE OUR COMPLETE ARRAY INTO K SUBSETS OF EQUAL SUM
+I.E TARGET SUM = SUM(NUMS) / K
+SO IF IT IS NOT POSSIBLE RETURN FALSE
+I.E IF SUM(ARR) % K != 0 --> RETURN FALSE
+
+INITIALIZE TARGET = SUM(NUMS) // K
+CREATE A USED ARRAY TO KEEP TRACK OF ELEMENTS USED
+USED = [FALSE] * LEN(NUMS)
+
+OUR APPRAOCH WILL BE TO TRY AND CREATE SUBSET WITH SUM == TARGET
+WHILE DOING THIS, WE WILL HAVE TWO CHOICES, EITHER TO INCLUDE AN ELEMENT IN OUR SUM OR NOT TO
+IF WE CREATE A SUBSET WITH SUM TARGET, THEN WE WILL UPDATE IT IN USED ARRAY
+
+FUN(START_IDX, K, CURR_SUM)
+
+BASE CASE IN BACKTRACK --> IF K==0 RETURN TRUE
+I.E WE ARE ABLE TO CREATE K SUBSETS WITH EQUAL SUM I.E SUM(NUMS)//K
+
+IF FOR K > 0, OUR CURR_SUM EQUALS TARGET:
+---> CALL BACKTRACK AGAIN FROM START OF ARRAY, WITH CURR_SUM = 0
+---> I.E BACKTRACK(0, K-1, 0)
+
+FINALLY THE MAIN STEP
+ITERATE OVER ARRAY FROM START_INDEX TILL END:
+--> IF USED[IDX] == TRUE OR CURR_SUM + NUMS[IDX] > TARGET
+-----> CONTINUE
+    # INCLUDING THE ELEMENT
+--> USED[IDX] = TRUE
+--> FUN(IDX+1, K, CURR_SUM + NUMS[IDX])
+    # BACLTRACK
+--> USED[IDX] = FALSE
+RETURN FALSE
+
+
+class Solution:
+    def canPartitionKSubsets(self, nums: List[int], k: int) -> bool:
+        if sum(nums) % k != 0:
+            return False
+
+        target = sum(nums) // k
+        used = [False] * len(nums)
+
+        # start to fill kth bucket with elements in nums
+        return self.backtrack(k, nums, used, 0, target, 0)
+
+
+    def backtrack(self, k, nums, used, start, target, bucket):
+        # Base case. k buckets have been fully filled
+        if k == 0:
+            return True
+
+        if bucket == target:
+            return self.backtrack(k-1, nums, used, 0, target, 0)
+
+        for i in range(start, len(nums)):
+            if used[i] or nums[i] + bucket > target:
+                continue
+
+            used[i] = True
+            bucket += nums[i]
+            # Put the next element into the bucket
+            if self.backtrack(k, nums, used, i+1, target, bucket):
+                return True
+
+            used[i] = False
+            bucket -= nums[i]
+
+            if bucket == 0:
+                return False
+
+        return False
+----------------------------------------------------------------------------------------------------
+
+47.
